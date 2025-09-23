@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createEvent } from '../api/events';
+import { toast } from 'react-toastify';
 
 // The form now accepts props to handle editing
 const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false }) => {
@@ -39,43 +40,49 @@ const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false
     setError('');
     try {
       await createEvent(formData);
-      alert('Event created successfully!');
+      toast.success('Event created successfully!');
       navigate('/dashboard/organizer');
     } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to create event.');
+      const errorMsg = err.response?.data?.msg || 'Failed to create event.';
+      setError(errorMsg);
+      // You can also show an error toast here if you like
+      toast.error(errorMsg);
     }
   };
   
   // Use the appropriate handler based on whether we are editing or creating
   const finalOnSubmit = isEditing ? (e) => { e.preventDefault(); onUpdate(formData); } : handleCreate;
+   const inputStyles = "w-full p-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all";
+  const buttonStyles = "bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200";
   
-  return (
-    <div className="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-center">
+   return (
+    // Softer shadow, more padding, and a subtle background
+    <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto border border-gray-200">
+      <h2 className="text-3xl font-bold mb-6 text-center font-heading">
         {isEditing ? 'Edit Your Event' : 'Create a New Event'}
       </h2>
-      <form onSubmit={finalOnSubmit}>
+      <form onSubmit={finalOnSubmit} className="space-y-6">
         {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
         
-        {/* Form fields remain the same */}
-        <div className="mb-4">
+        {/* Form fields with updated styles */}
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">Event Title</label>
-          <input type="text" name="title" value={title} onChange={onChange} required className="shadow appearance-none border rounded w-full py-2 px-3"/>
+          <input type="text" name="title" value={title} onChange={onChange} required className={inputStyles} />
         </div>
-        <div className="mb-4">
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">Description</label>
-          <textarea name="description" value={description} onChange={onChange} required rows="4" className="shadow appearance-none border rounded w-full py-2 px-3"/>
+          <textarea name="description" value={description} onChange={onChange} required rows="4" className={inputStyles} />
         </div>
-        <div className="mb-4">
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">Date and Time</label>
-          <input type="datetime-local" name="date" value={date} onChange={onChange} required className="shadow appearance-none border rounded w-full py-2 px-3"/>
+          <input type="datetime-local" name="date" value={date} onChange={onChange} required className={inputStyles} />
         </div>
-        <div className="mb-6">
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">Location</label>
-          <input type="text" name="location" value={location} onChange={onChange} required className="shadow appearance-none border rounded w-full py-2 px-3"/>
+          <input type="text" name="location" value={location} onChange={onChange} required className={inputStyles} placeholder="e.g., Online, or City, State" />
         </div>
-        <div className="flex items-center justify-center">
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg" type="submit">
+        <div className="flex items-center justify-center pt-4">
+          <button className={buttonStyles} type="submit">
             {isEditing ? 'Save Changes' : 'Create Event'}
           </button>
         </div>

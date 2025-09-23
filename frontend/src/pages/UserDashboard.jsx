@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { getRegisteredEvents, unregisterFromEvent } from '../api/events'; // <-- Import unregisterFromEvent
+import { toast } from 'react-toastify';
 
 const UserDashboard = () => {
   const [registeredEvents, setRegisteredEvents] = useState([]);
@@ -31,9 +32,9 @@ const UserDashboard = () => {
         setRegisteredEvents(prevEvents => 
           prevEvents.filter(event => event._id !== eventId)
         );
-        alert('Successfully unregistered!');
+        toast.success('Successfully unregistered!');
       } catch (err) {
-        alert('Failed to unregister. Please try again.');
+        toast.error('Failed to unregister. Please try again.');
         console.error(err);
       }
     }

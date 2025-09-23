@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEventById, updateEvent } from '../api/events';
 import EventForm from '../components/EventForm'; // We will reuse the EventForm
+import { toast } from 'react-toastify';
 
 const EditEvent = () => {
   const { id } = useParams();
@@ -26,10 +27,11 @@ const EditEvent = () => {
   const handleUpdate = async (formData) => {
     try {
       await updateEvent(id, formData);
-      alert('Event updated successfully!');
+       toast.success('Event updated successfully!');
       navigate('/dashboard/organizer');
     } catch (error) {
-      alert('Failed to update event.');
+      const errorMsg = error.response?.data?.msg || 'Failed to update event.';
+        toast.error('Failed to update event.')
       console.error("Failed to update event", error);
     }
   };

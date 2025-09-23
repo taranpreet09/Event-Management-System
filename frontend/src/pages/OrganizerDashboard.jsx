@@ -40,7 +40,7 @@ const OrganizerDashboard = () => {
         await deleteEvent(eventId);
         fetchMyEvents();
       } catch (err) {
-        alert('Failed to delete event.');
+        toast.error('Failed to delete event.');
       }
     }
   };
@@ -55,7 +55,7 @@ const OrganizerDashboard = () => {
         eventName: eventName,
       });
     } catch (err) {
-      alert('Could not fetch attendees.');
+      toast.error('Failed to fetch attendees');
       console.error(err);
     }
   };

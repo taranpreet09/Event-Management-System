@@ -9,6 +9,7 @@ import ChoiceScreen from './components/ChoiceScreen';
 import RegisterForm from './components/RegisterForm';
 import { useModal } from './context/ModalContext'; // Note the corrected path './'
 import OrganisationRegisterForm from './components/OrganisationRegisterForm';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   // We get everything we need from the context! No local useState needed here.
@@ -17,6 +18,19 @@ const { modalView, hideModal } = useModal();
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar no longer needs props passed to it. It gets what it needs from the context itself. */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      
       <Navbar /> 
       
       <main className="flex-grow container mx-auto px-4 py-8">

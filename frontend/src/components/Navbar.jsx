@@ -11,25 +11,25 @@ const Navbar = () => {
   // The main dashboard path is now the same for everyone
   const dashboardPath = '/dashboard';
 
-  return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
-      <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold text-indigo-600">EventManager</Link>
+return (
+    // Softer shadow, more padding, and a subtle border
+    <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
+      <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <Link to="/" className="text-2xl font-bold text-indigo-600 font-heading">EventManager</Link>
         <div className="flex items-center space-x-6">
-          <NavLink to="/" className={({ isActive }) => isActive ? "text-indigo-600 font-semibold" : "text-gray-600 hover:text-indigo-600"}>Home</NavLink>
-          <NavLink to="/events" className={({ isActive }) => isActive ? "text-indigo-600 font-semibold" : "text-gray-600 hover:text-indigo-600"}>Events</NavLink>
+          <NavLink to="/" className={({ isActive }) => isActive ? "text-indigo-600 font-bold" : "text-gray-600 hover:text-indigo-600 font-medium"}>Home</NavLink>
+          <NavLink to="/events" className={({ isActive }) => isActive ? "text-indigo-600 font-bold" : "text-gray-600 hover:text-indigo-600 font-medium"}>Events</NavLink>
           
           {isAuthenticated ? (
             <>
-              {/* This NavLink now correctly points to the unified dashboard */}
-              <NavLink to={dashboardPath} className={({ isActive }) => isActive ? "text-indigo-600 font-semibold" : "text-gray-600 hover:text-indigo-600"}>Dashboard</NavLink>
-              {/* Logout is handled in the Sidebar now, but can be kept here too if desired */}
-              <button onClick={logout} className="text-gray-600 hover:text-indigo-600">Logout</button>
+              <NavLink to="/dashboard" className={({ isActive }) => isActive ? "text-indigo-600 font-bold" : "text-gray-600 hover:text-indigo-600 font-medium"}>Dashboard</NavLink>
+              <button onClick={logout} className="text-gray-600 hover:text-indigo-600 font-medium">Logout</button>
             </>
           ) : (
             <button 
               onClick={() => showModal('CHOICE')} 
-              className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+              // Updated button styles for a modern look
+              className="bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 shadow-md hover:shadow-lg"
             >
               Login / Sign Up
             </button>
