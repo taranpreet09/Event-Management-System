@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getEventById } from '../api/events';
 
 const EventDetail = () => {
-  const { id } = useParams(); // Gets the event ID from the URL
+  const { id } = useParams(); 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +22,7 @@ const EventDetail = () => {
       }
     };
     fetchEvent();
-  }, [id]); // Re-run effect if the ID in the URL changes
+  }, [id]); 
 
   if (loading) return <div className="text-center mt-10">Loading Event...</div>;
   if (error) return <div className="text-center mt-10 text-red-500">{error}</div>;

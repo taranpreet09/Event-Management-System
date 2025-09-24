@@ -1,11 +1,9 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom'; // <-- Import Link
+import { Link } from 'react-router-dom'; 
 
 const EventCard = ({ eventId, title, date, location, organizerName, onRegister }) => {
   const { isAuthenticated, user } = useAuth();
-  
-  // Note: Your backend Event model uses _id, so we should use that for the link
   const isMyEvent = user?.id === eventId; 
 
   

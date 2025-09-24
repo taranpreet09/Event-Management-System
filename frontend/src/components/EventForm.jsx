@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { createEvent } from '../api/events';
 import { toast } from 'react-toastify';
 
-// The form now accepts props to handle editing
 const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -14,10 +13,8 @@ const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false
   });
   const [error, setError] = useState('');
 
-  // When editing, populate the form with existing event data
   useEffect(() => {
     if (isEditing && existingEvent) {
-      // Format the date correctly for the datetime-local input
       const formattedDate = existingEvent.date ? new Date(existingEvent.date).toISOString().slice(0, 16) : '';
       setFormData({
         title: existingEvent.title || '',
@@ -34,7 +31,6 @@ const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // This is the handler for CREATING a new event
   const handleCreate = async (e) => {
     e.preventDefault();
     setError('');
@@ -45,18 +41,15 @@ const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false
     } catch (err) {
       const errorMsg = err.response?.data?.msg || 'Failed to create event.';
       setError(errorMsg);
-      // You can also show an error toast here if you like
       toast.error(errorMsg);
     }
   };
   
-  // Use the appropriate handler based on whether we are editing or creating
   const finalOnSubmit = isEditing ? (e) => { e.preventDefault(); onUpdate(formData); } : handleCreate;
    const inputStyles = "w-full p-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all";
   const buttonStyles = "bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200";
   
    return (
-    // Softer shadow, more padding, and a subtle background
     <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto border border-gray-200">
       <h2 className="text-3xl font-bold mb-6 text-center font-heading">
         {isEditing ? 'Edit Your Event' : 'Create a New Event'}
@@ -64,7 +57,6 @@ const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false
       <form onSubmit={finalOnSubmit} className="space-y-6">
         {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
         
-        {/* Form fields with updated styles */}
         <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">Event Title</label>
           <input type="text" name="title" value={title} onChange={onChange} required className={inputStyles} />

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const OrganisationRegisterForm = () => {
   const { showModal } = useModal();
-  const { registerOrganizer } = useAuth(); // <-- Use registerOrganizer
+  const { registerOrganizer } = useAuth(); 
 
   const [formData, setFormData] = useState({ name: '', email: '', password: '', password2: '' });
   const { name, email, password, password2 } = formData;
@@ -16,8 +16,7 @@ const OrganisationRegisterForm = () => {
     if (password !== password2) {
       console.log('Passwords do not match');
     } else {
-      // The backend expects 'name' for the organization name
-      registerOrganizer({ name, email, password }); // <-- Call registerOrganizer
+      registerOrganizer({ name, email, password });
     }
   };
 

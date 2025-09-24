@@ -2,18 +2,16 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Helper function to create a token
 const createToken = (user) => {
     const payload = {
         user: {
             id: user.id,
-            role: user.role, // <-- IMPORTANT: Add role to the token
+            role: user.role, 
         },
     };
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
 };
 
-// @desc    Register a standard user
 exports.registerUser = async (req, res) => {
     const { name, email, password } = req.body;
     try {
@@ -33,10 +31,8 @@ exports.registerUser = async (req, res) => {
         res.status(500).send('Server error');
     }
 };
-
-// @desc    Register an organizer
 exports.registerOrganizer = async (req, res) => {
-    const { name, email, password } = req.body; // 'name' can be the organization name
+    const { name, email, password } = req.body;
     try {
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ msg: 'User already exists' });
@@ -55,7 +51,6 @@ exports.registerOrganizer = async (req, res) => {
     }
 };
 
-// @desc    Login user
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -77,19 +72,13 @@ exports.checkEmail = async (req, res) => {
     try {
         const user = await User.findOne({ email }).select('-password');
         if (!user) {
-            // --- THIS IS THE CHANGE ---
-            // Send a 404 error if the user is not found.
             return res.status(404).json({ msg: 'User not found' });
         }
         
-        // AFTER
-
-// ... inside checkEmail function
 if (user.role === 'organizer') {
     return res.status(200).json({ role: 'organizer', organisationName: user.name });
 }
 
-// Now it sends the role AND the user's name
 return res.status(200).json({ role: 'user', name: user.name });
     } catch (err) {
         console.error(err.message);

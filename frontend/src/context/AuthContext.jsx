@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; // npm install jwt-decode
+import { jwtDecode } from 'jwt-decode'; 
 import { useModal } from './ModalContext';
 
 const AuthContext = createContext(null);
@@ -43,7 +43,6 @@ export const AuthProvider = ({ children }) => {
       setToken(res.data.token);
       hideModal();
 
-      // Redirect based on role
       if (decoded.user.role === 'organizer') {
         navigate('/dashboard/organizer');
       } else {

@@ -6,7 +6,6 @@ export default {
   ],
   theme: {
     extend: {
-      // Add our custom fonts to Tailwind's theme
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         heading: ['Poppins', 'sans-serif'],

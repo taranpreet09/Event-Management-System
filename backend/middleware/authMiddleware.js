@@ -8,21 +8,18 @@ exports.protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      // Attach user to the request object
       req.user = await User.findById(decoded.id).select('-password');
       next();
     } catch (error) {
-      res.status(401).json({ msg: 'Not authorized, token failed' });
+      return res.status(401).json({ msg: 'Not authorized, token failed' });
     }
   }
 
   if (!token) {
-    res.status(401).json({ msg: 'Not authorized, no token' });
+    return res.status(401).json({ msg: 'Not authorized, no token' });
   }
 };
 
-// Optional but recommended: Middleware to check for a specific role
 exports.isOrganisation = (req, res, next) => {
   if (req.user && req.user.role === 'organisation') {
     next();

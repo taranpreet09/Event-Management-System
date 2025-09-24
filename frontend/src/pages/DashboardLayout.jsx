@@ -6,7 +6,6 @@ const DashboardLayout = () => {
   return (
     <div className="flex min-h-[calc(100vh-150px)]">
       <Sidebar />
-      {/* --- 2. Replace 'main' with 'motion.main' and add animation props --- */}
       <motion.main 
         className="flex-grow p-8 bg-gray-50"
         initial={{ opacity: 0, y: 10 }}

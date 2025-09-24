@@ -20,13 +20,13 @@ const EventSchema = new Schema({
     },
     organizer: {
         type: Schema.Types.ObjectId,
-        ref: 'user', // This creates a link to the User model
+        ref: 'user', 
         required: true,
     },
     attendees: [{
         type: Schema.Types.ObjectId,
         ref: 'user',
     }],
-}, { timestamps: true }); // Adds createdAt and updatedAt fields automatically
+}, { timestamps: true }); 
 
 module.exports = mongoose.model('event', EventSchema);

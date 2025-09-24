@@ -71,7 +71,6 @@ const Home = () => {
 
   return (
     <div className="bg-gray-50 text-gray-800">
-      {/* --- Hero Section --- */}
       <main className="relative overflow-hidden">
         <div aria-hidden="true" className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-gray-100 -z-10" />
         <div aria-hidden="true" className="absolute -top-48 left-1/2 -z-10 h-[42.375rem] w-[42.375rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-[#93c5fd] to-[#3b82f6] opacity-20" />
@@ -95,7 +94,6 @@ const Home = () => {
         </div>
       </main>
 
-      {/* --- Features Section --- */}
       <section id="features" className="bg-white py-20 sm:py-28">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-2xl mx-auto lg:mx-0">
@@ -131,7 +129,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* --- Footer --- */}
       <footer className="bg-gray-900 text-white">
         <div className="container mx-auto py-12 px-6 lg:px-8">
           <div className="flex justify-between items-center flex-wrap gap-8">

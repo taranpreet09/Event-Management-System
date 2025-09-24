@@ -44,7 +44,6 @@ const Profile = () => {
  return (
     <div>
       <h1 className="text-4xl font-bold mb-8 font-heading">My Profile</h1>
-      {/* Updated card styles */}
       <div className="bg-white p-8 rounded-xl shadow-lg mb-8 border border-gray-200">
         <div className="space-y-4 text-lg">
             <p><strong>Name:</strong> {user?.name}</p>
@@ -56,7 +55,6 @@ const Profile = () => {
       <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
         <h2 className="text-3xl font-bold mb-6 font-heading">Change Password</h2>
         <form onSubmit={onSubmit} className="space-y-6">
-          {/* Form fields with updated styles */}
           <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">Current Password</label>
             <input type="password" name="currentPassword" value={currentPassword} onChange={onChange} required className={inputStyles} />

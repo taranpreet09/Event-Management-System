@@ -5,9 +5,8 @@ import { useAuth } from '../context/AuthContext';
 const Sidebar = () => {
   const { user, logout } = useAuth();
 
-  // CORRECT PATH
  const commonLinks = [
-    { path: '/dashboard/profile', name: 'My Profile' }, // <-- This is the corrected line
+    { path: '/dashboard/profile', name: 'My Profile' }, 
   ];
   const userLinks = [
     { path: '/dashboard', name: 'Registered Events' },

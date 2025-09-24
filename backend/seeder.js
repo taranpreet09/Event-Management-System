@@ -2,14 +2,11 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 
-// Load env vars
 dotenv.config();
 
-// Load models
 const User = require('./models/User');
 const Event = require('./models/Event');
 
-// Connect to DB
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -20,23 +17,19 @@ const connectDB = async () => {
   }
 };
 
-// --- EXPANDED MOCK DATA ---
-// NOTE: All users still have the password 'password123'
 const mockUsers = [
-  // Organizers
   { name: 'TechCon Global', email: 'contact@techcon.com', password: 'password123', role: 'organizer' },
   { name: 'MusicFest Planners', email: 'booking@musicfest.com', password: 'password123', role: 'organizer' },
-  // --- NEW ORGANIZERS ---
+
   { name: 'Creative Workshops Inc.', email: 'learn@creative.com', password: 'password123', role: 'organizer' },
   { name: 'Local Food Fairs', email: 'events@localfood.com', password: 'password123', role: 'organizer' },
 
-  // Regular Users
   { name: 'Alice Johnson', email: 'alice@example.com', password: 'password123', role: 'user' },
   { name: 'Bob Williams', email: 'bob@example.com', password: 'password123', role: 'user' },
   { name: 'Charlie Brown', email: 'charlie@example.com', password: 'password123', role: 'user' },
   { name: 'Diana Prince', email: 'diana@example.com', password: 'password123', role: 'user' },
   { name: 'Ethan Hunt', email: 'ethan@example.com', password: 'password123', role: 'user' },
-  // --- NEW USERS ---
+
   { name: 'Fiona Glenanne', email: 'fiona@example.com', password: 'password123', role: 'user' },
   { name: 'George Costanza', email: 'george@example.com', password: 'password123', role: 'user' },
   { name: 'Hannah Abbott', email: 'hannah@example.com', password: 'password123', role: 'user' },
@@ -70,7 +63,6 @@ const importData = async () => {
     const foodFestId = organizers[3]._id;
 
     const mockEvents = [
-      // --- ORIGINAL EVENTS (UPCOMING) ---
       {
         title: 'Global AI Summit 2025',
         description: 'Join the brightest minds in AI to discuss the future of technology. Full-day event with keynotes, workshops, and networking opportunities.',
@@ -96,7 +88,6 @@ const importData = async () => {
         attendees: [regularUsers[0]._id, regularUsers[1]._id]
       },
       
-      // --- NEW EVENTS (MIX OF UPCOMING AND PAST) ---
       {
         title: 'Watercolor Painting for Beginners',
         description: 'Unleash your inner artist! This is a relaxing and fun introduction to watercolor painting techniques. All art supplies provided.',
@@ -121,7 +112,6 @@ const importData = async () => {
         organizer: techConId,
         attendees: [regularUsers[7]._id, regularUsers[9]._id]
       },
-      // --- PAST EVENT ---
       {
         title: 'Summer Marketing Conference',
         description: 'A look back at the biggest trends in digital marketing from the summer. A great networking event for marketing professionals.',
@@ -130,7 +120,6 @@ const importData = async () => {
         organizer: techConId,
         attendees: [regularUsers[2]._id, regularUsers[5]._id]
       },
-      // --- PAST EVENT ---
        {
         title: 'Artisan Cheese & Wine Tasting',
         description: 'An evening of sophisticated flavors. Sample a curated selection of artisan cheeses paired with fine wines. A very popular past event!',
@@ -153,7 +142,6 @@ const importData = async () => {
 };
 
 const destroyData = async () => {
-  // ... (this function remains the same)
   try {
     await connectDB();
     await User.deleteMany();

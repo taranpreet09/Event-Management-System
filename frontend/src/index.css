@@ -1,37 +1,29 @@
-/* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap');
 
-/* Apply Tailwind base styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Define CSS Variables for our Design System */
 :root {
-  /* Fonts */
   --font-heading: 'Poppins', sans-serif;
   --font-body: 'Inter', sans-serif;
-
-  /* Color Palette */
-  --color-primary: #4f46e5;       /* A vibrant indigo */
-  --color-primary-hover: #4338ca; /* A darker indigo for hover */
-  --color-secondary: #10b981;     /* A fresh emerald green */
-  --color-text: #374151;         /* A dark gray for body text */
-  --color-text-light: #6b7280;   /* A lighter gray for subtext */
-  --color-heading: #111827;       /* A very dark gray for headings */
-  --color-background: #f9fafb;    /* A very light gray for page backgrounds */
-  --color-surface: #ffffff;      /* White for cards and modals */
-  --color-border: #e5e7eb;       /* A light gray for borders */
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-secondary: #10b981;
+  --color-text: #374151;
+  --color-text-light: #6b7280;
+  --color-heading: #111827;
+  --color-background: #f9fafb;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
 }
 
-/* Apply base styles to the body */
 body {
   font-family: var(--font-body);
   color: var(--color-text);
   background-color: var(--color-background);
 }
 
-/* Style headings to use the Poppins font */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--color-heading);

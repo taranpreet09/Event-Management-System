@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEventById, updateEvent } from '../api/events';
-import EventForm from '../components/EventForm'; // We will reuse the EventForm
+import EventForm from '../components/EventForm'; 
 import { toast } from 'react-toastify';
 
 const EditEvent = () => {
@@ -40,7 +40,6 @@ const EditEvent = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* We will refactor EventForm to accept existing data and a custom handler */}
       <EventForm 
         existingEvent={event} 
         onSubmit={handleUpdate} 

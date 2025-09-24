@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
-import { getRegisteredEvents, unregisterFromEvent } from '../api/events'; // <-- Import unregisterFromEvent
+import { getRegisteredEvents, unregisterFromEvent } from '../api/events'; 
 import { toast } from 'react-toastify';
 
 const UserDashboard = () => {
@@ -23,12 +23,10 @@ const UserDashboard = () => {
     fetchRegisteredEvents();
   }, []);
 
-  // --- NEW HANDLER FOR UNREGISTERING ---
   const handleUnregister = async (eventId) => {
     if (window.confirm('Are you sure you want to unregister from this event?')) {
       try {
         await unregisterFromEvent(eventId);
-        // For immediate UI feedback, filter the event out of the local state
         setRegisteredEvents(prevEvents => 
           prevEvents.filter(event => event._id !== eventId)
         );
@@ -55,7 +53,6 @@ const UserDashboard = () => {
                 <p className="text-gray-600 mb-1">Date: {new Date(event.date).toLocaleDateString()}</p>
                 <p className="text-gray-600">Location: {event.location}</p>
               </div>
-              {/* --- NEW BUTTON ADDED --- */}
               <div className="mt-4">
                 <button 
                   onClick={() => handleUnregister(event._id)}

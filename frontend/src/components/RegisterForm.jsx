@@ -4,12 +4,11 @@ import { useAuth } from '../context/AuthContext';
 
 const RegisterForm = () => {
   const { showModal } = useModal();
-  const { registerUser } = useAuth(); // <-- Use registerUser
+  const { registerUser } = useAuth(); 
 
   const [formData, setFormData] = useState({ name: '', email: '', password: '', password2: '' });
   const { name, email, password, password2 } = formData;
   
-  // Use 'name' attribute on inputs for easier handling
   const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const onSubmit = e => {
@@ -17,7 +16,7 @@ const RegisterForm = () => {
     if (password !== password2) {
       console.log('Passwords do not match');
     } else {
-      registerUser({ name, email, password }); // <-- Call registerUser
+      registerUser({ name, email, password }); 
     }
   };
 

@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getMyEvents, deleteEvent, getEventAttendees } from '../api/events'; // <-- Import getEventAttendees
-import Modal from '../components/Modal'; // <-- Import the Modal component
-
+import { getMyEvents, deleteEvent, getEventAttendees } from '../api/events'; 
+import Modal from '../components/Modal'; 
 const OrganizerDashboard = () => {
   const [myEvents, setMyEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // --- NEW STATE FOR THE MODAL ---
   const [attendeesModal, setAttendeesModal] = useState({
     isOpen: false,
     attendees: [],
@@ -17,7 +15,6 @@ const OrganizerDashboard = () => {
   });
 
   const fetchMyEvents = async () => {
-    // ... (this function remains the same)
     try {
       setLoading(true);
       const response = await getMyEvents();
@@ -34,7 +31,6 @@ const OrganizerDashboard = () => {
   }, []);
 
   const handleDelete = async (eventId) => {
-    // ... (this function remains the same)
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
         await deleteEvent(eventId);
@@ -45,7 +41,6 @@ const OrganizerDashboard = () => {
     }
   };
 
-  // --- NEW HANDLER FOR VIEWING ATTENDEES ---
   const handleViewAttendees = async (eventId, eventName) => {
     try {
       const response = await getEventAttendees(eventId);
@@ -69,7 +64,6 @@ const OrganizerDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* ... (header and create event button remain the same) */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Organizer Dashboard</h1>
         <Link to="/create-event" className="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700">
@@ -82,7 +76,7 @@ const OrganizerDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {myEvents.map(event => (
             <div key={event._id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500 flex flex-col justify-between">
-              {/* Event details */}
+
               <div>
                 <h3 className="text-xl font-bold mb-2">{event.title}</h3>
                 <p className="text-gray-600 mb-1">Date: {new Date(event.date).toLocaleDateString()}</p>
@@ -92,9 +86,7 @@ const OrganizerDashboard = () => {
                 </p>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end items-center space-x-2 mt-4">
-                {/* --- NEW BUTTON --- */}
                 <button onClick={() => handleViewAttendees(event._id, event.title)} className="bg-blue-500 text-white font-semibold py-1 px-3 rounded hover:bg-blue-600 text-sm">
                   View Attendees
                 </button>
@@ -114,7 +106,6 @@ const OrganizerDashboard = () => {
         </div>
       )}
 
-      {/* --- NEW MODAL RENDER --- */}
       {attendeesModal.isOpen && (
         <Modal onClose={closeModal}>
           <h2 className="text-2xl font-bold mb-4">Attendees for "{attendeesModal.eventName}"</h2>

@@ -5,7 +5,6 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
-// Register API call
 const registerForEventAPI = (eventId) => {
   const token = localStorage.getItem('token');
   return axios.put(
@@ -20,11 +19,9 @@ const EventList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- NEW STATE for search and filter ---
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('upcoming'); // Default to show upcoming events
+  const [filter, setFilter] = useState('upcoming'); 
 
-  // --- Animation variants ---
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -38,7 +35,6 @@ const EventList = () => {
     visible: { y: 0, opacity: 1 },
   };
 
-  // Fetch events
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
@@ -56,7 +52,6 @@ const EventList = () => {
     }
   }, [searchTerm, filter]);
 
-  // Debounced effect
   useEffect(() => {
     const timerId = setTimeout(() => {
       fetchEvents();
@@ -78,7 +73,6 @@ const EventList = () => {
 
   return (
     <div>
-      {/* --- Search & Filter UI --- */}
       <div className="mb-8 p-6 bg-gray-50 rounded-lg">
         <h1 className="text-3xl font-bold mb-4">Find Your Next Event</h1>
         <div className="flex flex-col md:flex-row gap-4">
@@ -124,7 +118,6 @@ const EventList = () => {
         </div>
       </div>
 
-      {/* --- Event List --- */}
       {loading ? (
         <div className="text-center">Loading events...</div>
       ) : error ? (
