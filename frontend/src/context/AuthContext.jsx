@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; 
+import { jwtDecode } from 'jwt-decode';
 import { useModal } from './ModalContext';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
@@ -15,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(null);
   const { hideModal } = useModal();
+  const navigate = useNavigate(); // The only navigate instance you need
 
   useEffect(() => {
     if (token) {
@@ -35,49 +37,47 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const login = useCallback(async (formData, navigate) => {
+  // highlight-start
+  // No longer accepts 'navigate' as a parameter
+  const login = useCallback(async (formData) => {
     try {
       const res = await api.post('/auth/login', formData);
-      const decoded = jwtDecode(res.data.token);
-
       setToken(res.data.token);
       hideModal();
-
-      if (decoded.user.role === 'organizer') {
-        navigate('/dashboard/organizer');
-      } else {
-        navigate('/dashboard/user');
-      }
+      navigate('/dashboard'); // Uses the navigate from the context scope
     } catch (err) {
       console.error('Login failed:', err.response?.data?.msg || err.message);
     }
-  }, [hideModal]);
+  }, [hideModal, navigate]); // Added navigate to dependency array
 
-  const registerUser = useCallback(async (formData, navigate) => {
+  const registerUser = useCallback(async (formData) => {
     try {
       const res = await api.post('/auth/register-user', formData);
       setToken(res.data.token);
       hideModal();
-      navigate('/dashboard/user');
+      navigate('/dashboard');
     } catch (err) {
       console.error('User registration failed:', err.response?.data?.msg || err.message);
     }
-  }, [hideModal]);
+  }, [hideModal, navigate]);
 
-  const registerOrganizer = useCallback(async (formData, navigate) => {
+  const registerOrganizer = useCallback(async (formData) => {
     try {
       const res = await api.post('/auth/register-organizer', formData);
       setToken(res.data.token);
       hideModal();
-      navigate('/dashboard/organizer');
+      navigate('/dashboard');
     } catch (err) {
       console.error('Organizer registration failed:', err.response?.data?.msg || err.message);
     }
-  }, [hideModal]);
+  }, [hideModal, navigate]);
+  // highlight-end
 
   const logout = useCallback(() => {
     setToken(null);
-  }, []);
+    // Optional: navigate to home page on logout
+    navigate('/');
+  }, [navigate]); // Added navigate to dependency array
 
   const value = useMemo(() => ({
     token,
