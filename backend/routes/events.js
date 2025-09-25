@@ -6,15 +6,20 @@ const {
   getOrganizerEvents,
   registerForEvent,
   getRegisteredEvents,
-   getEventAttendees,
+  getEventAttendees,
   getEventById,
-   updateEvent, 
-   unregisterFromEvent,
-  deleteEvent 
+  updateEvent,
+  unregisterFromEvent,
+  deleteEvent,
+  getEventsByDate
 } = require('../controllers/eventsController');
 const auth = require('../middleware/auth');
 
+// Routes
 router.get('/', getAllEvents);
+
+// 📅 Get events by date (must come BEFORE /:id)
+router.get('/by-date', getEventsByDate);
 
 router.get('/my-events', auth, getOrganizerEvents); 
 
@@ -24,7 +29,7 @@ router.put('/unregister/:id', auth, unregisterFromEvent);
 
 router.get('/:id/attendees', auth, getEventAttendees);
 
-router.get('/:id', getEventById); 
+router.get('/:id', getEventById); // Get event by ID
 
 router.post('/', auth, createEvent);
 
