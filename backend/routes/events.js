@@ -11,7 +11,8 @@ const {
   updateEvent,
   unregisterFromEvent,
   deleteEvent,
-  getEventsByDate
+  getEventsByDate,
+   verifyEventRegistration
 } = require('../controllers/eventsController');
 const auth = require('../middleware/auth');
 
@@ -38,5 +39,6 @@ router.put('/register/:id', auth, registerForEvent);
 router.put('/:id', auth, updateEvent);
 
 router.delete('/:id', auth, deleteEvent);
+router.get('/verify/:token', verifyEventRegistration);
 
 module.exports = router;

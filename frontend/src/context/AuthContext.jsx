@@ -71,11 +71,10 @@ export const AuthProvider = ({ children }) => {
       console.error('Organizer registration failed:', err.response?.data?.msg || err.message);
     }
   }, [hideModal, navigate]);
-  // highlight-end
+  
 
   const logout = useCallback(() => {
     setToken(null);
-    // Optional: navigate to home page on logout
     navigate('/');
   }, [navigate]); // Added navigate to dependency array
 

@@ -17,21 +17,36 @@ const registerForEventAPI = (eventId) => {
 };
 
 const EventList = () => {
+  // --- State ---
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [filter, setFilter] = useState('upcoming');
+
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
+  // --- Debounce search ---
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  // --- Animation variants ---
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
+  // --- Fetch events by search/filter ---
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
-      const params = { search: searchTerm, filter: filter === 'all' ? '' : filter };
+      setError(null);
+      const params = { search: debouncedSearchTerm, filter: filter === 'all' ? '' : filter };
       const response = await getAllEvents(params);
       setEvents(response.data);
     } catch (err) {
@@ -40,21 +55,17 @@ const EventList = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filter]);
+  }, [debouncedSearchTerm, filter]);
 
+  // --- Fetch events by date (calendar) ---
   const fetchEventsByDate = useCallback(async () => {
     if (!selectedDate) return;
     try {
       setLoading(true);
-
-      // ✅ Format date in local time (YYYY-MM-DD)
       const formattedDate = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1)
         .toString()
         .padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
-
-      const response = await axios.get(
-        `http://localhost:1111/api/events/by-date?date=${formattedDate}`
-      );
+      const response = await axios.get(`http://localhost:1111/api/events/by-date?date=${formattedDate}`);
       setEvents(response.data);
     } catch (err) {
       setError('Could not fetch events for this date.');
@@ -64,11 +75,13 @@ const EventList = () => {
     }
   }, [selectedDate]);
 
+  // --- Main effect ---
   useEffect(() => {
     if (selectedDate) fetchEventsByDate();
     else fetchEvents();
   }, [fetchEvents, fetchEventsByDate, selectedDate]);
 
+  // --- Handlers ---
   const handleRegister = async (eventId) => {
     try {
       const res = await registerForEventAPI(eventId);
@@ -79,6 +92,7 @@ const EventList = () => {
     }
   };
 
+  // --- UI ---
   return (
     <div className="relative">
       <div className="mb-8 p-6 bg-gray-50 rounded-lg">
@@ -109,9 +123,7 @@ const EventList = () => {
         </div>
 
         {selectedDate && (
-          <p className="text-gray-600 mb-4">
-            Showing events for: {selectedDate.toDateString()}
-          </p>
+          <p className="text-gray-600 mb-4">Showing events for: {selectedDate.toDateString()}</p>
         )}
       </div>
 
@@ -133,7 +145,7 @@ const EventList = () => {
                 title={event.title}
                 date={new Date(event.date).toLocaleString()}
                 location={event.location}
-                organizerName={event.organizer.name}
+                organizerName={event.organizer ? event.organizer.name : 'Unknown'}
                 onRegister={handleRegister}
               />
             </motion.div>

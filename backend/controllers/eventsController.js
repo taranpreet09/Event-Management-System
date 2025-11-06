@@ -1,6 +1,7 @@
 const Event = require('../models/Event');
 const User = require('../models/User');
-
+const sendEmail = require('../utils/sendEmail');
+const crypto = require('crypto');
 // Get all events with optional search and filter
 exports.getAllEvents = async (req, res) => {
   try {
@@ -25,8 +26,8 @@ exports.getAllEvents = async (req, res) => {
 
     const events = await Event.find(queryObject)
       .sort({ date: 1 })
-      .populate('organizer', 'name');
-
+      .populate('organizer', 'name')
+      .populate('attendees.user', 'name');
     res.json(events);
   } catch (err) {
     console.error(err.message);
@@ -75,21 +76,102 @@ exports.getOrganizerEvents = async (req, res) => {
 
 // Register for an event
 exports.registerForEvent = async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ msg: 'Event not found' });
+    try {
+        const eventId = req.params.id;
+        const userId = req.user.id;
+        
+        const event = await Event.findById(eventId);
+        const user = await User.findById(userId); // Get user details for email
 
-    if (event.organizer.toString() === req.user.id) {
-      return res.status(400).json({ msg: "You cannot register for your own event." });
+        if (!event) {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
+
+        if (event.organizer.toString() === userId) {
+            return res.status(400).json({ msg: "You cannot register for your own event." });
+        }
+
+        // Check if user is already in the attendees list
+        if (event.attendees.some(attendee => attendee.user.equals(userId))) {
+            return res.status(400).json({ msg: 'You are already registered for this event.' });
+        }
+
+        // Add user to attendees list (unverified)
+        event.attendees.push({ user: userId });
+        
+        // Generate verification token using our model method
+        const verificationToken = event.createRegistrationToken(userId);
+        await event.save();
+
+        // Create verification URL
+        const verificationURL = `${req.protocol}://${req.get(
+          'host'
+        )}/api/events/verify/${verificationToken}`; // NOTE: Make sure this matches your route in events.js
+
+        const message = `
+          <h1>Hello ${user.name},</h1>
+          <p>Thank you for registering for the event: <strong>${event.title}</strong>.</p>
+          <p>Please click the link below to confirm your registration. This link is valid for 15 minutes.</p>
+          <a href="${verificationURL}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify My Registration</a>
+          <p>If you did not register for this event, please ignore this email.</p>
+        `;
+
+        // Send the email
+        await sendEmail({
+          email: user.email,
+          subject: 'Confirm Your Event Registration',
+          html: message,
+        });
+
+        res.json({ msg: 'Successfully registered! Please check your email to verify.' });
+
+    } catch (err) {
+        console.error(err.message);
+        // TODO: Add logic to remove the user from attendees if email sending fails
+        res.status(500).send('Server Error');
     }
-
-    await event.updateOne({ $addToSet: { attendees: req.user.id } });
-    res.json({ msg: 'Successfully registered for the event' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
 };
+// ▲▲▲ END OF UPDATED FUNCTION ▲▲▲
+
+
+// ▼▼▼ THIS IS A NEW FUNCTION ▼▼▼
+exports.verifyEventRegistration = async (req, res) => {
+    try {
+        const token = req.params.token;
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+        // Find the event containing the attendee with this token
+        const event = await Event.findOne({
+          'attendees.verificationToken': hashedToken,
+          'attendees.verificationTokenExpires': { $gt: Date.now() },
+        });
+    
+        if (!event) {
+          return res.status(400).send('<h1>Error</h1><p>Token is invalid or has expired.</p>');
+        }
+    
+        // Find the specific attendee to update
+        const attendee = event.attendees.find(
+          (att) => att.verificationToken === hashedToken
+        );
+    
+        // Update the attendee's status to verified
+        attendee.isVerified = true;
+        attendee.verificationToken = undefined;
+        attendee.verificationTokenExpires = undefined;
+    
+        await event.save();
+    
+        // You can redirect to a success page on your frontend
+        // res.redirect('http://your-frontend.com/registration-success');
+        res.status(200).send('<h1>Success!</h1><p>Your registration is confirmed. Thank you!</p>');
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('<h1>Error</h1><p>An error occurred during verification.</p>');
+    }
+};
+// ▲▲▲ END OF NEW FUNCTION ▲▲▲
 
 // Get events registered by a user
 exports.getRegisteredEvents = async (req, res) => {
@@ -97,7 +179,8 @@ exports.getRegisteredEvents = async (req, res) => {
     return res.status(403).json({ msg: 'Access denied: Users only' });
   }
   try {
-    const events = await Event.find({ attendees: req.user.id }).sort({ date: 1 });
+ const events = await Event.find({ 'attendees.user': req.user.id }).sort({ date: 1 });
+        
     res.json(events);
   } catch (err) {
     console.error(err.message);
@@ -108,14 +191,18 @@ exports.getRegisteredEvents = async (req, res) => {
 // Get event by ID
 exports.getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id).populate('organizer', 'name');
+    const event = await Event.findById(req.params.id)
+      .populate('organizer', 'name')
+      .populate('attendees.user', 'name email');
 
-    if (!event) return res.status(404).json({ msg: 'Event not found' });
-
+    if (!event) {
+      return res.status(404).json({ msg: 'Event not found' });
+    }
     res.json(event);
   } catch (err) {
     console.error(err.message);
-    if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Event not found' });
+    if (err.kind === 'ObjectId')
+      return res.status(404).json({ msg: 'Event not found' });
     res.status(500).send('Server Error');
   }
 };
@@ -174,7 +261,7 @@ exports.getEventAttendees = async (req, res) => {
     }
 
     const eventWithAttendees = await Event.findById(req.params.id).populate(
-      'attendees',
+      'attendees.user',
       'name email'
     );
 
