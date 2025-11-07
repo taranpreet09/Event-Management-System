@@ -278,7 +278,7 @@ exports.unregisterFromEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ msg: 'Event not found' });
 
-    await event.updateOne({ $pull: { attendees: req.user.id } });
+    await event.updateOne({ $pull: { attendees: { user: req.user.id } } });
     res.json({ msg: 'Successfully unregistered from the event' });
   } catch (err) {
     console.error(err.message);

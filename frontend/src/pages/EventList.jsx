@@ -82,15 +82,26 @@ const EventList = () => {
   }, [fetchEvents, fetchEventsByDate, selectedDate]);
 
   // --- Handlers ---
-  const handleRegister = async (eventId) => {
-    try {
-      const res = await registerForEventAPI(eventId);
-      toast.success(res.data.msg);
-    } catch (err) {
-      toast.error(err.response?.data?.msg || 'Failed to register.');
-      console.error(err);
-    }
-  };
+ const [registeringEvent, setRegisteringEvent] = useState(null);
+
+const handleRegister = async (eventId) => {
+  // prevent multiple clicks for same event
+  if (registeringEvent === eventId) return;
+
+  setRegisteringEvent(eventId);
+  toast.info("Registering... please wait.", { autoClose: 1500 });
+
+  try {
+    const res = await registerForEventAPI(eventId);
+    toast.success(res.data.msg || "Registered successfully!");
+  } catch (err) {
+    toast.error(err.response?.data?.msg || "Failed to register.");
+    console.error(err);
+  } finally {
+    setRegisteringEvent(null);
+  }
+};
+
 
   // --- UI ---
   return (
