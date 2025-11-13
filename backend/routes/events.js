@@ -34,6 +34,8 @@ router.get('/:id', getEventById); // Get event by ID
 
 router.post('/', auth, createEvent);
 
+router.post("/register/:id", auth, registerForEvent);
+
 router.put('/register/:id', auth, registerForEvent);
 
 router.put('/:id', auth, updateEvent);
