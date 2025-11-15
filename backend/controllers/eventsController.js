@@ -2,8 +2,7 @@ const Event = require('../models/Event');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto');
-const redis = require("../config/redis");   // Redis Added Here
-
+const { redisClient } = require("../config/redis");
 // ================================
 // Get all events (WITH CACHING)
 // ================================
@@ -14,7 +13,7 @@ exports.getAllEvents = async (req, res) => {
     const cacheKey = `events:${search || "all"}:${filter || "all"}`;
 
     // 1️⃣ CHECK CACHE
-    const cachedData = await redis.get(cacheKey);
+    const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       console.log("🔥 CACHE HIT → getAllEvents");
       return res.json(JSON.parse(cachedData));
@@ -46,7 +45,7 @@ exports.getAllEvents = async (req, res) => {
       .populate('attendees.user', 'name');
 
     // 2️⃣ SAVE TO CACHE
-    await redis.set(cacheKey, JSON.stringify(events), { EX: 120 });
+    await redisClient.set(cacheKey, JSON.stringify(events), { EX: 120 });
 
     res.json(events);
   } catch (err) {
@@ -58,32 +57,50 @@ exports.getAllEvents = async (req, res) => {
 // ================================
 // Create new event (clear cache)
 // ================================
+// ================================
+// Create new event (clear cache)
+// ================================
 exports.createEvent = async (req, res) => {
-  if (req.user.role !== 'organizer') {
-    return res.status(403).json({ msg: 'Access denied: Organizers only' });
-  }
+ if (req.user.role !== 'organizer') {
+ return res.status(403).json({ msg: 'Access denied: Organizers only' });
+ }
 
-  const { title, description, date, location } = req.body;
+ const { title, description, date, location } = req.body;
 
-  try {
-    const newEvent = new Event({
+ try {
+ const newEvent = new Event({
       title,
-      description,
-      date,
-      location,
-      organizer: req.user.id,
-    });
+description,
+ date,
+ location,
+organizer: req.user.id,
+ });
 
-    const event = await newEvent.save();
+ const event = await newEvent.save();
 
-    // ❌ Invalidate caches
-    await redis.del("events:all:all");
+ // ==================================
+ // ⭐ START: YOUR PUB/SUB CODE ⭐
+ // ==================================
+ const channel = 'event-updates';
+ const message = JSON.stringify({
+ type: 'EVENT_ADDED',
+ payload: event // Send the entire new event object
+ });
+ 
+ await redisClient.publish(channel, message);
+ console.log(`🚀 [Pub/Sub] PUBLISHED message to '${channel}'`);
+ // ==================================
+ // ⭐ END: YOUR PUB/SUB CODE ⭐
+ // ==================================
 
-    res.json(event);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
+ // ❌ Invalidate caches
+ await redisClient.del("events:all:all");
+
+res.json(event);
+} catch (err) {
+ console.error(err.message);
+  res.status(500).send('Server Error');
+}
 };
 
 // ================================
@@ -144,8 +161,8 @@ exports.registerForEvent = async (req, res) => {
     });
 
     // ❌ Invalidate caches
-    await redis.del("events:all:all");
-    await redis.del(`event:${eventId}`);
+    await redisClient.del("events:all:all");
+    await redisClient.del(`event:${eventId}`);
 
     res.json({ msg: 'Successfully registered! Check email for verification.' });
 
@@ -183,8 +200,8 @@ exports.verifyEventRegistration = async (req, res) => {
     await event.save();
 
     // ❌ Clear cache
-    await redis.del("events:all:all");
-    await redis.del(`event:${event._id}`);
+    await redisClient.del("events:all:all");
+    await redisClient.del(`event:${event._id}`);
 
     res.status(200).send('<h1>Success!</h1><p>Your registration is confirmed.</p>');
 
@@ -217,7 +234,7 @@ exports.getEventById = async (req, res) => {
   try {
     const cacheKey = `event:${req.params.id}`;
 
-    const cachedEvent = await redis.get(cacheKey);
+    const cachedEvent = await redisClient.get(cacheKey);
     if (cachedEvent) {
       console.log("🔥 CACHE HIT → event by ID");
       return res.json(JSON.parse(cachedEvent));
@@ -231,7 +248,7 @@ exports.getEventById = async (req, res) => {
       return res.status(404).json({ msg: 'Event not found' });
     }
 
-    await redis.set(cacheKey, JSON.stringify(event), { EX: 300 });
+    await redisClient.set(cacheKey, JSON.stringify(event), { EX: 300 });
 
     res.json(event);
   } catch (err) {
@@ -261,8 +278,8 @@ exports.updateEvent = async (req, res) => {
     );
 
     // ❌ Clear cache
-    await redis.del("events:all:all");
-    await redis.del(`event:${req.params.id}`);
+    await redisClient.del("events:all:all");
+    await redisClient.del(`event:${req.params.id}`);
 
     res.json(event);
   } catch (err) {
@@ -274,26 +291,51 @@ exports.updateEvent = async (req, res) => {
 // ================================
 // Delete Event
 // ================================
+// ================================
+// Delete Event
+// ================================
 exports.deleteEvent = async (req, res) => {
-  try {
-    let event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ msg: 'Event not found' });
+ try {
+ let event = await Event.findById(req.params.id);
+if (!event) return res.status(404).json({ msg: 'Event not found' });
 
-    if (event.organizer.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
+if (event.organizer.toString() !== req.user.id) {
+return res.status(401).json({ msg: 'User not authorized' });
+}
 
-    await Event.findByIdAndDelete(req.params.id);
+ await Event.findByIdAndDelete(req.params.id);
 
-    // ❌ Invalidate caches
-    await redis.del("events:all:all");
-    await redis.del(`event:${req.params.id}`);
+// ==================================
+ // ⭐ START: YOUR PUB/SUB CODE ⭐
+ // ==================================
+const channel = 'event-updates';
+ const message = JSON.stringify({
+ type: 'EVENT_DELETED',
+payload: {
+ eventId: req.params.id,
+ organizerId: req.user.id,
+ eventName: event.title 
+ }
+ });
 
-    res.json({ msg: 'Event removed' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
+ // Use the main redisClient to PUBLISH
+ await redisClient.publish(channel, message);
+
+ // This is your new confirmation log: console.log(`🚀 [Pub/Sub] PUBLISHED message to '${channel}'`);
+ console.log(`   L Message Payload: ${message}`);
+ // ==================================
+ // ⭐ END: YOUR PUB/SUB CODE ⭐
+ // ==================================
+
+// ❌ Invalidate caches (This uses the fix from Step 2)
+ await redisClient.del("events:all:all");
+ await redisClient.del(`event:${req.params.id}`);
+
+ res.json({ msg: 'Event removed' });
+ } catch (err) {
+ console.error(err.message);
+ res.status(500).send('Server Error');
+ }
 };
 
 // ================================
@@ -329,8 +371,8 @@ exports.unregisterFromEvent = async (req, res) => {
     await event.updateOne({ $pull: { attendees: { user: req.user.id } } });
 
     // ❌ Clear cache
-    await redis.del("events:all:all");
-    await redis.del(`event:${req.params.id}`);
+    await redisClient.del("events:all:all");
+    await redisClient.del(`event:${req.params.id}`);
 
     res.json({ msg: 'Successfully unregistered from the event' });
   } catch (err) {
@@ -349,7 +391,7 @@ exports.getEventsByDate = async (req, res) => {
 
     const cacheKey = `eventsByDate:${date}`;
 
-    const cachedData = await redis.get(cacheKey);
+    const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       console.log("🔥 CACHE HIT → eventsByDate");
       return res.json(JSON.parse(cachedData));
@@ -365,7 +407,7 @@ exports.getEventsByDate = async (req, res) => {
       date: { $gte: start, $lte: end }
     }).populate('organizer', 'name');
 
-    await redis.set(cacheKey, JSON.stringify(events), { EX: 120 });
+    await redisClient.set(cacheKey, JSON.stringify(events), { EX: 120 });
 
     res.json(events);
   } catch (err) {
