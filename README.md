@@ -430,4 +430,3 @@ await enqueueNotificationJob({
 
 ---
 
-You can adjust project name, author info, or email details as needed before committing this README.
