@@ -5,18 +5,21 @@ import { useAuth } from '../context/AuthContext';
 const Sidebar = () => {
   const { user, logout } = useAuth();
 
- const commonLinks = [
-    { path: '/dashboard/profile', name: 'My Profile' }, 
+  const commonLinks = [
+    { path: '/dashboard/profile', name: 'My Profile' },
+    { path: '/dashboard/inbox', name: 'Inbox' },
   ];
+
   const userLinks = [
     { path: '/dashboard', name: 'Registered Events' },
-    ...commonLinks
+    ...commonLinks,
   ];
 
   const organizerLinks = [
     { path: '/dashboard', name: 'My Events' },
-    { path: '/create-event', name: 'Create Event' },
-    ...commonLinks
+    { path: '/dashboard/events/create', name: 'Create Event' },
+    { path: '/dashboard/broadcast', name: 'Broadcast' },
+    ...commonLinks,
   ];
 
   const links = user?.role === 'organizer' ? organizerLinks : userLinks;

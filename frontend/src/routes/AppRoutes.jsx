@@ -13,38 +13,81 @@ import CreateEvent from '../pages/CreateEvent';
 import EditEvent from '../pages/EditEvent';
 import Profile from '../pages/Profile'; 
 import BroadcastPage from '../pages/BroadcastPage'; // <-- Correctly imported
+import InboxPage from '../pages/InboxPage';
+import ConversationPage from '../pages/ConversationPage';
 
 const AppRoutes = () => {
-  const { user } = useAuth();
+	const { user } = useAuth();
 
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/events" element={<EventList />} />
-      <Route path="/events/:id" element={<EventDetail />} />
+	return (
+		<Routes>
+			<Route path="/" element={<Home />} />
+			<Route path="/events" element={<EventList />} />
+			<Route path="/events/:id" element={<EventDetail />} />
 
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={user?.role === 'organizer' ? <OrganizerDashboard /> : <UserDashboard />} />
-        <Route path="profile" element={<Profile />} />
-      </Route>
+			{/* DASHBOARD + AUTHENTICATED AREA */}
+			<Route
+				path="/dashboard"
+				element={
+					<ProtectedRoute>
+						<DashboardLayout />
+					</ProtectedRoute>
+				}
+			>
+				{/* default dashboard: organizer vs user */}
+				<Route
+					index
+					 element={user?.role === 'organizer' ? <OrganizerDashboard /> : <UserDashboard />} 
+				/>
+				{/* profile */}
+				<Route path="profile" element={<Profile />} />
+				{/* organizer-only nested routes */}
+				<Route
+					path="events/create"
+					element={
+						<ProtectedRoute requiredRole="organizer">
+							<CreateEvent />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="events/:id/edit"
+					element={
+						<ProtectedRoute requiredRole="organizer">
+							<EditEvent />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="broadcast"
+					element={
+						<ProtectedRoute requiredRole="organizer">
+							<BroadcastPage />
+						</ProtectedRoute>
+					}
+				/>
+				{/* inbox (any authenticated user) */}
+				<Route
+					path="inbox"
+					element={
+						<ProtectedRoute>
+							<InboxPage />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="inbox/:conversationId"
+					element={
+						<ProtectedRoute>
+							<ConversationPage />
+						</ProtectedRoute>
+					}
+				/>
+			</Route>
 
-      {/* --- ORGANIZER-ONLY ROUTES --- */}
-      <Route path="/create-event" element={<ProtectedRoute requiredRole="organizer"><CreateEvent /></ProtectedRoute>} />
-      <Route path="/edit-event/:id" element={<ProtectedRoute requiredRole="organizer"><EditEvent /></ProtectedRoute>} />
-      
-      {/* ⭐ THIS IS YOUR NEW ROUTE */}
-      <Route path="/broadcast" element={<ProtectedRoute requiredRole="organizer"><BroadcastPage /></ProtectedRoute>} />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+			<Route path="*" element={<NotFound />} />
+		</Routes>
+	);
 };
 
 export default AppRoutes;

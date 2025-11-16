@@ -28,6 +28,11 @@ async function startNotificationWorker() {
         const message = JSON.stringify(payload);
         await redisClient.publish(channel, message);
         console.log(`🔔 Published BROADCAST_MESSAGE to '${channel}'`);
+      } else if (type === 'INBOX_MESSAGE') {
+        const channel = 'notifications';
+        const message = JSON.stringify(payload);
+        await redisClient.publish(channel, message);
+        console.log(`🔔 Published INBOX_MESSAGE to '${channel}'`);
       } else {
         console.warn('Notification worker: unknown job type', type);
       }

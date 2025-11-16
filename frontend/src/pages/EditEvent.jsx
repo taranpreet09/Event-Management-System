@@ -24,12 +24,12 @@ const EditEvent = () => {
     fetchEvent();
   }, [id]);
 
-  const handleUpdate = async (formData) => {
-    try {
-      await updateEvent(id, formData);
-       toast.success('Event updated successfully!');
-      navigate('/dashboard/organizer');
-    } catch (error) {
+	const handleUpdate = async (formData) => {
+		try {
+			await updateEvent(id, formData);
+			toast.success('Event updated successfully!');
+			navigate('/dashboard');
+		} catch (error) {
       const errorMsg = error.response?.data?.msg || 'Failed to update event.';
         toast.error('Failed to update event.')
       console.error("Failed to update event", error);

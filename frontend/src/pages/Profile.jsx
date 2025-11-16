@@ -43,7 +43,6 @@ const Profile = () => {
   const buttonStyles = "bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200";
  return (
     <div>
-      <h1 className="text-4xl font-bold mb-8 font-heading">My Profile</h1>
       <div className="bg-white p-8 rounded-xl shadow-lg mb-8 border border-gray-200">
         <div className="space-y-4 text-lg">
             <p><strong>Name:</strong> {user?.name}</p>

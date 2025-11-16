@@ -36,6 +36,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/users', require('./routes/users')); 
 app.use('/api/broadcast', require('./routes/broadcast'));
+app.use('/api/messages', require('./routes/messages'));
 app.get('/', (req, res) => {
     res.send('API is running...');
 });

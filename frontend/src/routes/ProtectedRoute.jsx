@@ -11,12 +11,12 @@ const ProtectedRoute = ({ children, requiredRole }) => {
         return <Navigate to="/" state={{ from: location, showLogin: true }} replace />;
     }
 
-    if (requiredRole && user.role !== requiredRole) {
-        const destination = user.role === 'user' ? '/dashboard/user' : '/';
-        return <Navigate to={destination} replace />;
-    }
+	if (requiredRole && user.role !== requiredRole) {
+		const destination = user.role === 'user' ? '/dashboard' : '/dashboard';
+		return <Navigate to={destination} replace />;
+	}
 
-    return children;
+	return children;
 };
 
 export default ProtectedRoute;

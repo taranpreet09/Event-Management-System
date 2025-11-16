@@ -11,9 +11,11 @@ import { ToastContainer } from 'react-toastify';
 
 // ⭐ 1. Import React hooks
 import React, { useEffect, useState } from 'react'; 
+import { useAuth } from './context/AuthContext';
 
 function App() {
   const { modalView, hideModal } = useModal();
+  const { user } = useAuth();
   
   // State to hold the list of messages
   const [notifications, setNotifications] = useState([]);
@@ -52,18 +54,46 @@ function App() {
         alert(`🗑️ EVENT DELETED: ${data.eventName || 'Unknown event'}`);
 
       } else if (data.type === 'BROADCAST_MESSAGE') {
+        // Optionally hide broadcast "new" notifications for the organizer who sent it
+        if (user && data.organizerId && data.organizerId === user.id) {
+          return;
+        }
+
         console.log('New broadcast!', data.payload);
         
         // Add new notification to the top of the list
         setNotifications((prevNotifications) => [
-          data.payload, 
+          { id: Date.now(), title: data.payload.title, text: data.payload.text, type: 'broadcast' },
           ...prevNotifications, 
         ]);
         
-        // ⭐ 5. Activate the red dot
         setHasUnseenNotifications(true); 
         
         alert(`🔔 NEW NOTIFICATION: ${data.payload.title}`);
+      
+      } else if (data.type === 'INBOX_MESSAGE') {
+        // Prefer to show only to intended recipient if toUserId is present
+        if (!user) {
+          return;
+        }
+
+        const myUserId = user.id || user._id || user.userId;
+        if (data.toUserId && data.toUserId !== myUserId) {
+          return;
+        }
+
+        setNotifications((prevNotifications) => [
+          {
+            id: Date.now(),
+            title: `New message from ${data.organizerName || 'Organizer'}`,
+            text: data.text,
+            type: 'inbox',
+            conversationId: data.conversationId,
+          },
+          ...prevNotifications,
+        ]);
+        setHasUnseenNotifications(true);
+        alert(`✉️ New message from ${data.organizerName || 'Organizer'}`);
       
       } else if (data.type === 'welcome') {
         console.log(`[WebSocket] Server says: ${data.message}`);
@@ -82,7 +112,7 @@ function App() {
     return () => {
       ws.close();
     };
-  }, []); // The empty array [] means this runs only ONCE
+  }, [user]); // Re-run when user changes so we have the latest user in WS handler
 
   return (
     <div className="flex flex-col min-h-screen">
