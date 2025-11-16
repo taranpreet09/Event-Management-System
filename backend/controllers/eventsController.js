@@ -3,6 +3,7 @@ const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto');
 const { redisClient } = require("../config/redis");
+const { enqueueEmailJob, enqueueNotificationJob } = require('../utils/queue');
 // ================================
 // Get all events (WITH CACHING)
 // ================================
@@ -78,20 +79,12 @@ organizer: req.user.id,
 
  const event = await newEvent.save();
 
- // ==================================
- // ⭐ START: YOUR PUB/SUB CODE ⭐
- // ==================================
- const channel = 'event-updates';
- const message = JSON.stringify({
- type: 'EVENT_ADDED',
- payload: event // Send the entire new event object
+ // Enqueue notification job instead of publishing directly
+ await enqueueNotificationJob({
+   type: 'EVENT_ADDED',
+   event,
+   userId: req.user.id,
  });
- 
- await redisClient.publish(channel, message);
- console.log(`🚀 [Pub/Sub] PUBLISHED message to '${channel}'`);
- // ==================================
- // ⭐ END: YOUR PUB/SUB CODE ⭐
- // ==================================
 
  // ❌ Invalidate caches
  await redisClient.del("events:all:all");
@@ -154,7 +147,8 @@ exports.registerForEvent = async (req, res) => {
       <a href="${verificationURL}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify</a>
     `;
 
-    await sendEmail({
+    // Enqueue email job instead of sending synchronously
+    await enqueueEmailJob({
       email: user.email,
       subject: 'Confirm Your Event Registration',
       html: message,
@@ -305,29 +299,15 @@ return res.status(401).json({ msg: 'User not authorized' });
 
  await Event.findByIdAndDelete(req.params.id);
 
-// ==================================
- // ⭐ START: YOUR PUB/SUB CODE ⭐
- // ==================================
-const channel = 'event-updates';
- const message = JSON.stringify({
- type: 'EVENT_DELETED',
-payload: {
- eventId: req.params.id,
- organizerId: req.user.id,
- eventName: event.title 
- }
+ // Enqueue notification job instead of publishing directly
+ await enqueueNotificationJob({
+   type: 'EVENT_DELETED',
+   eventId: req.params.id,
+   organizerId: req.user.id,
+   eventName: event.title,
  });
 
- // Use the main redisClient to PUBLISH
- await redisClient.publish(channel, message);
-
- // This is your new confirmation log: console.log(`🚀 [Pub/Sub] PUBLISHED message to '${channel}'`);
- console.log(`   L Message Payload: ${message}`);
- // ==================================
- // ⭐ END: YOUR PUB/SUB CODE ⭐
- // ==================================
-
-// ❌ Invalidate caches (This uses the fix from Step 2)
+ // ❌ Invalidate caches (This uses the fix from Step 2)
  await redisClient.del("events:all:all");
  await redisClient.del(`event:${req.params.id}`);
 

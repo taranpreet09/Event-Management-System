@@ -1,4 +1,5 @@
 const { redisClient } = require('../config/redis');
+const { enqueueNotificationJob } = require('../utils/queue');
 
 exports.createBroadcast = async (req, res) => {
   // 1. Check for permission (organizer only)
@@ -11,22 +12,21 @@ exports.createBroadcast = async (req, res) => {
     return res.status(400).json({ msg: 'Title and text are required' });
   }
 
-  try {
-    const channel = 'notifications'; // A new channel, just for this!
-    const message = JSON.stringify({
-      type: 'BROADCAST_MESSAGE',
-      payload: {
-        id: new Date().getTime(), // Simple unique ID
-        title,
-        text,
-      },
-    });
+  try {
+    const payload = {
+      id: new Date().getTime(),
+      title,
+      text,
+      organizerId: req.user.id,
+    };
 
-    // 2. Publish the broadcast
-    await redisClient.publish(channel, message);
-    console.log(`🚀 [Pub/Sub] PUBLISHED message to '${channel}'`);
+    // Enqueue notification job instead of publishing directly
+    await enqueueNotificationJob({
+      type: 'BROADCAST_MESSAGE',
+      payload,
+    });
 
-    res.json({ msg: 'Broadcast message sent successfully' });
+    res.json({ msg: 'Broadcast message enqueued successfully' });
 
   } catch (err) {
     console.error(err.message);

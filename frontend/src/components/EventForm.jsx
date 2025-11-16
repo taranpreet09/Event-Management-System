@@ -37,7 +37,8 @@ const EventForm = ({ existingEvent = null, onSubmit: onUpdate, isEditing = false
     try {
       await createEvent(formData);
       toast.success('Event created successfully!');
-      navigate('/dashboard/organizer');
+      // Redirect to main dashboard (route exists and shows organizer dashboard when role=organizer)
+      navigate('/dashboard');
     } catch (err) {
       const errorMsg = err.response?.data?.msg || 'Failed to create event.';
       setError(errorMsg);

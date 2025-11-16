@@ -32,8 +32,8 @@ function App() {
   };
 
   useEffect(() => {
-    // Connect to your backend's port (1111)
-    const ws = new WebSocket('ws://localhost:1111');
+    // Connect to your backend's port (5000)
+    const ws = new WebSocket('ws://localhost:5000');
 
     ws.onopen = () => {
       console.log('✅ [WebSocket] Connected to server.');
@@ -44,10 +44,12 @@ function App() {
       console.log('🎁 [WebSocket] Message received:', data);
 
       if (data.type === 'EVENT_ADDED') {
-        alert(`🎉 NEW EVENT ADDED: ${data.payload.title}`);
+        // Backend now sends { type: 'EVENT_ADDED', event: {...}, userId }
+        alert(`🎉 NEW EVENT ADDED: ${data.event?.title || 'Unknown title'}`);
       
       } else if (data.type === 'EVENT_DELETED') {
-        alert(`🗑️ EVENT DELETED: ${data.payload.eventName}`);
+        // Backend sends { type: 'EVENT_DELETED', eventName, eventId, organizerId }
+        alert(`🗑️ EVENT DELETED: ${data.eventName || 'Unknown event'}`);
 
       } else if (data.type === 'BROADCAST_MESSAGE') {
         console.log('New broadcast!', data.payload);

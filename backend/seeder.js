@@ -62,6 +62,14 @@ const importData = async () => {
     const creativeId = organizers[2]._id;
     const foodFestId = organizers[3]._id;
 
+    const toAttendees = (users) =>
+      users.map((u) => ({
+        user: u._id,
+        isVerified: true,
+        verificationToken: undefined,
+        verificationTokenExpires: undefined,
+      }));
+
     const mockEvents = [
       {
         title: 'Global AI Summit 2025',
@@ -69,7 +77,7 @@ const importData = async () => {
         date: new Date('2025-10-22T09:00:00'),
         location: 'San Francisco, CA',
         organizer: techConId,
-        attendees: [regularUsers[0]._id, regularUsers[2]._id, regularUsers[3]._id]
+        attendees: toAttendees([regularUsers[0], regularUsers[2], regularUsers[3]]),
       },
       {
         title: 'Indie Rock Fest',
@@ -77,7 +85,7 @@ const importData = async () => {
         date: new Date('2025-11-15T12:00:00'),
         location: 'Austin, TX',
         organizer: musicFestId,
-        attendees: [regularUsers[1]._id, regularUsers[3]._id, regularUsers[4]._id]
+        attendees: toAttendees([regularUsers[1], regularUsers[3], regularUsers[4]]),
       },
       {
         title: 'Web Dev Workshop: Advanced React',
@@ -85,16 +93,15 @@ const importData = async () => {
         date: new Date('2025-12-05T10:00:00'),
         location: 'Online',
         organizer: techConId,
-        attendees: [regularUsers[0]._id, regularUsers[1]._id]
+        attendees: toAttendees([regularUsers[0], regularUsers[1]]),
       },
-      
       {
         title: 'Watercolor Painting for Beginners',
         description: 'Unleash your inner artist! This is a relaxing and fun introduction to watercolor painting techniques. All art supplies provided.',
         date: new Date('2025-09-30T14:00:00'),
         location: 'New York, NY',
         organizer: creativeId,
-        attendees: [regularUsers[5]._id, regularUsers[6]._id, regularUsers[8]._id]
+        attendees: toAttendees([regularUsers[5], regularUsers[6], regularUsers[8]]),
       },
       {
         title: 'Downtown Food Truck Festival',
@@ -102,7 +109,7 @@ const importData = async () => {
         date: new Date('2025-10-04T11:00:00'),
         location: 'Chicago, IL',
         organizer: foodFestId,
-        attendees: [regularUsers[0]._id, regularUsers[1]._id, regularUsers[2]._id, regularUsers[3]._id, regularUsers[4]._id]
+        attendees: toAttendees([regularUsers[0], regularUsers[1], regularUsers[2], regularUsers[3], regularUsers[4]]),
       },
       {
         title: 'Introduction to Python Coding',
@@ -110,7 +117,7 @@ const importData = async () => {
         date: new Date('2025-11-08T09:30:00'),
         location: 'Online',
         organizer: techConId,
-        attendees: [regularUsers[7]._id, regularUsers[9]._id]
+        attendees: toAttendees([regularUsers[7], regularUsers[9]]),
       },
       {
         title: 'Summer Marketing Conference',
@@ -118,15 +125,15 @@ const importData = async () => {
         date: new Date('2025-08-10T11:00:00'),
         location: 'Boston, MA',
         organizer: techConId,
-        attendees: [regularUsers[2]._id, regularUsers[5]._id]
+        attendees: toAttendees([regularUsers[2], regularUsers[5]]),
       },
-       {
+      {
         title: 'Artisan Cheese & Wine Tasting',
         description: 'An evening of sophisticated flavors. Sample a curated selection of artisan cheeses paired with fine wines. A very popular past event!',
         date: new Date('2025-07-20T19:00:00'),
         location: 'Napa Valley, CA',
         organizer: foodFestId,
-        attendees: [regularUsers[6]._id, regularUsers[7]._id, regularUsers[9]._id]
+        attendees: toAttendees([regularUsers[6], regularUsers[7], regularUsers[9]]),
       },
     ];
 

@@ -10,7 +10,7 @@ import 'react-calendar/dist/Calendar.css';
 const registerForEventAPI = (eventId) => {
   const token = localStorage.getItem('token');
   return axios.put(
-    `http://localhost:1111/api/events/register/${eventId}`,
+    `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/events/register/${eventId}`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -65,7 +65,7 @@ const EventList = () => {
       const formattedDate = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1)
         .toString()
         .padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
-      const response = await axios.get(`http://localhost:1111/api/events/by-date?date=${formattedDate}`);
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/events/by-date?date=${formattedDate}`);
       setEvents(response.data);
     } catch (err) {
       setError('Could not fetch events for this date.');
