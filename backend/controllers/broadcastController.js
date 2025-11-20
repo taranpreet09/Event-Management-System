@@ -2,7 +2,6 @@ const { redisClient } = require('../config/redis');
 const { enqueueNotificationJob } = require('../utils/queue');
 
 exports.createBroadcast = async (req, res) => {
-  // 1. Check for permission (organizer only)
   if (req.user.role !== 'organizer') {
     return res.status(403).json({ msg: 'Access denied: Organizers only' });
   }
@@ -20,7 +19,6 @@ exports.createBroadcast = async (req, res) => {
       organizerId: req.user.id,
     };
 
-    // Enqueue notification job instead of publishing directly
     await enqueueNotificationJob({
       type: 'BROADCAST_MESSAGE',
       payload,

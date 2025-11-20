@@ -72,7 +72,6 @@ function App() {
         alert(`🔔 NEW NOTIFICATION: ${data.payload.title}`);
       
       } else if (data.type === 'INBOX_MESSAGE') {
-        // Prefer to show only to intended recipient if toUserId is present
         if (!user) {
           return;
         }
@@ -85,7 +84,7 @@ function App() {
         setNotifications((prevNotifications) => [
           {
             id: Date.now(),
-            title: `New message from ${data.organizerName || 'Organizer'}`,
+            title: `New message from ${data.fromName || 'User'}`,
             text: data.text,
             type: 'inbox',
             conversationId: data.conversationId,
@@ -93,7 +92,7 @@ function App() {
           ...prevNotifications,
         ]);
         setHasUnseenNotifications(true);
-        alert(`✉️ New message from ${data.organizerName || 'Organizer'}`);
+        alert(`✉️ New message from ${data.fromName || 'User'}`);
       
       } else if (data.type === 'welcome') {
         console.log(`[WebSocket] Server says: ${data.message}`);
@@ -110,7 +109,10 @@ function App() {
 
     // Cleanup: Close the connection when the app unmounts
     return () => {
-      ws.close();
+      // Avoid closing a socket that hasn't finished connecting yet (prevents warning)
+      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CLOSING)) {
+        ws.close();
+      }
     };
   }, [user]); // Re-run when user changes so we have the latest user in WS handler
 

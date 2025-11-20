@@ -63,37 +63,83 @@ exports.getAllEvents = async (req, res) => {
 // ================================
 exports.createEvent = async (req, res) => {
  if (req.user.role !== 'organizer') {
- return res.status(403).json({ msg: 'Access denied: Organizers only' });
+   return res.status(403).json({ msg: 'Access denied: Organizers only' });
  }
 
- const { title, description, date, location } = req.body;
+ const {
+   title,
+   shortDescription,
+   description,
+   type,
+   category,
+   date,
+   registrationDeadline,
+   location,
+   coverImageUrl,
+   capacity,
+ } = req.body;
 
  try {
- const newEvent = new Event({
-      title,
-description,
- date,
- location,
-organizer: req.user.id,
- });
+   if (!title || !shortDescription || !description || !type || !category || !date || !registrationDeadline || !location || !coverImageUrl || !capacity) {
+     return res.status(400).json({ msg: 'All event fields are required.' });
+   }
 
- const event = await newEvent.save();
+   const eventDate = new Date(date);
+   const regDeadline = new Date(registrationDeadline);
+   const now = new Date();
 
- // Enqueue notification job instead of publishing directly
- await enqueueNotificationJob({
-   type: 'EVENT_ADDED',
-   event,
-   userId: req.user.id,
- });
+   if (isNaN(eventDate.getTime()) || isNaN(regDeadline.getTime())) {
+     return res.status(400).json({ msg: 'Invalid date or registration deadline.' });
+   }
 
- // ❌ Invalidate caches
- await redisClient.del("events:all:all");
+   if (eventDate <= now) {
+     return res.status(400).json({ msg: 'Event date must be in the future.' });
+   }
 
-res.json(event);
-} catch (err) {
- console.error(err.message);
-  res.status(500).send('Server Error');
-}
+   if (regDeadline >= eventDate) {
+     return res.status(400).json({ msg: 'Registration deadline must be before the event date.' });
+   }
+
+   if (regDeadline <= now) {
+     return res.status(400).json({ msg: 'Registration deadline must be in the future.' });
+   }
+
+   if (Number(capacity) <= 0) {
+     return res.status(400).json({ msg: 'Capacity must be a positive number.' });
+   }
+
+   const newEvent = new Event({
+     title,
+     shortDescription,
+     description,
+     type,
+     category,
+     date: eventDate,
+     registrationDeadline: regDeadline,
+     location,
+     coverImageUrl,
+     capacity: Number(capacity),
+     organizer: req.user.id,
+   });
+
+   const event = await newEvent.save();
+
+   // Enqueue notification job instead of publishing directly
+   await enqueueNotificationJob({
+     type: 'EVENT_ADDED',
+     event,
+     userId: req.user.id,
+   });
+
+  await redisClient.del("events:all:all");
+  await redisClient.del("events:all:upcoming");
+  await redisClient.del("events:all:past");
+
+   res.json(event);
+ } catch (err) {
+   console.error(err.message);
+   res.status(500).send('Server Error');
+ }
 };
 
 // ================================
@@ -125,6 +171,16 @@ exports.registerForEvent = async (req, res) => {
 
     if (!event) return res.status(404).json({ msg: 'Event not found' });
 
+    const now = new Date();
+    if (event.registrationDeadline && now > event.registrationDeadline) {
+      return res.status(400).json({ msg: 'Registration deadline has passed for this event.' });
+    }
+
+    const verifiedCount = event.attendees.filter(att => att.isVerified).length;
+    if (event.capacity && verifiedCount >= event.capacity) {
+      return res.status(400).json({ msg: 'This event is full. No more registrations allowed.' });
+    }
+
     if (event.organizer.toString() === userId) {
       return res.status(400).json({ msg: "You cannot register for your own event." });
     }
@@ -154,8 +210,9 @@ exports.registerForEvent = async (req, res) => {
       html: message,
     });
 
-    // ❌ Invalidate caches
     await redisClient.del("events:all:all");
+    await redisClient.del("events:all:upcoming");
+    await redisClient.del("events:all:past");
     await redisClient.del(`event:${eventId}`);
 
     res.json({ msg: 'Successfully registered! Check email for verification.' });
@@ -255,7 +312,18 @@ exports.getEventById = async (req, res) => {
 // Update Event
 // ================================
 exports.updateEvent = async (req, res) => {
-  const { title, description, date, location } = req.body;
+  const {
+    title,
+    shortDescription,
+    description,
+    type,
+    category,
+    date,
+    registrationDeadline,
+    location,
+    coverImageUrl,
+    capacity,
+  } = req.body;
 
   try {
     let event = await Event.findById(req.params.id);
@@ -265,14 +333,52 @@ exports.updateEvent = async (req, res) => {
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
+    const eventDate = new Date(date);
+    const regDeadline = new Date(registrationDeadline);
+    const now = new Date();
+
+    if (isNaN(eventDate.getTime()) || isNaN(regDeadline.getTime())) {
+      return res.status(400).json({ msg: 'Invalid date or registration deadline.' });
+    }
+
+    if (eventDate <= now) {
+      return res.status(400).json({ msg: 'Event date must be in the future.' });
+    }
+
+    if (regDeadline >= eventDate) {
+      return res.status(400).json({ msg: 'Registration deadline must be before the event date.' });
+    }
+
+    if (regDeadline <= now) {
+      return res.status(400).json({ msg: 'Registration deadline must be in the future.' });
+    }
+
+    if (Number(capacity) <= 0) {
+      return res.status(400).json({ msg: 'Capacity must be a positive number.' });
+    }
+
     event = await Event.findByIdAndUpdate(
       req.params.id,
-      { $set: { title, description, date, location } },
+      {
+        $set: {
+          title,
+          shortDescription,
+          description,
+          type,
+          category,
+          date: eventDate,
+          registrationDeadline: regDeadline,
+          location,
+          coverImageUrl,
+          capacity: Number(capacity),
+        },
+      },
       { new: true }
     );
 
-    // ❌ Clear cache
     await redisClient.del("events:all:all");
+    await redisClient.del("events:all:upcoming");
+    await redisClient.del("events:all:past");
     await redisClient.del(`event:${req.params.id}`);
 
     res.json(event);
@@ -307,9 +413,10 @@ return res.status(401).json({ msg: 'User not authorized' });
    eventName: event.title,
  });
 
- // ❌ Invalidate caches (This uses the fix from Step 2)
- await redisClient.del("events:all:all");
- await redisClient.del(`event:${req.params.id}`);
+  await redisClient.del("events:all:all");
+  await redisClient.del("events:all:upcoming");
+  await redisClient.del("events:all:past");
+  await redisClient.del(`event:${req.params.id}`);
 
  res.json({ msg: 'Event removed' });
  } catch (err) {

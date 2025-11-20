@@ -69,8 +69,6 @@ exports.sendMessageToAttendee = async (req, res) => {
   }
 };
 
-// POST /api/messages/events/:eventId/broadcast-inbox
-// Organizer sends the same inbox message to all attendees of an event
 exports.broadcastMessageToAttendees = async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -84,8 +82,6 @@ exports.broadcastMessageToAttendees = async (req, res) => {
     const event = await Event.findById(eventId).populate('organizer', 'name attendees.user');
     if (!event) return res.status(404).json({ msg: 'Event not found' });
 
-    // NOTE: Ownership check removed to avoid mismatches between event.organizer and token
-    // The organizer middleware already ensures the user has organizer role.
 
     const attendees = event.attendees.map((a) => a.user.toString());
     if (!attendees.length) {
@@ -124,9 +120,6 @@ exports.broadcastMessageToAttendees = async (req, res) => {
   }
 };
 
-// GET /api/messages/inbox
-// List conversations for the current user (as attendee OR organizer)
-// Also include per-conversation unread count for this user.
 exports.getInbox = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -160,9 +153,6 @@ exports.getInbox = async (req, res) => {
     res.status(500).json({ msg: 'Server Error' });
   }
 };
-
-// GET /api/messages/conversations/:conversationId
-// Get all messages in a conversation and mark incoming ones as read for this user
 exports.getConversationMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;

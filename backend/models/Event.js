@@ -7,7 +7,22 @@ const EventSchema = new Schema({
         type: String,
         required: true,
     },
+    shortDescription: {
+        type: String,
+        required: true,
+        maxlength: 200,
+    },
     description: {
+        type: String,
+        required: true,
+    },
+    type: {
+        type: String,
+        enum: ['online', 'in_person'],
+        required: true,
+        default: 'in_person',
+    },
+    category: {
         type: String,
         required: true,
     },
@@ -15,9 +30,22 @@ const EventSchema = new Schema({
         type: Date,
         required: true,
     },
+    registrationDeadline: {
+        type: Date,
+        required: true,
+    },
     location: {
         type: String,
         required: true,
+    },
+    coverImageUrl: {
+        type: String,
+        required: true,
+    },
+    capacity: {
+        type: Number,
+        required: true,
+        min: 1,
     },
     organizer: {
         type: Schema.Types.ObjectId,

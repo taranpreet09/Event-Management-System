@@ -7,7 +7,7 @@ async function startNotificationWorker() {
 
   while (true) {
     try {
-      const job = await dequeue(NOTIFICATION_QUEUE_KEY, 0); // block forever
+      const job = await dequeue(NOTIFICATION_QUEUE_KEY, 0); 
       if (!job) continue;
 
       const { payload } = job;

@@ -7,217 +7,121 @@ dotenv.config();
 const User = require('./models/User');
 const Event = require('./models/Event');
 
-const connectDB = async () => {
+async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ MongoDB Connected for Seeder...');
+    console.log('MongoDB Connected for Seeder');
   } catch (err) {
     console.error('Mongo connection error:', err.message);
     process.exit(1);
   }
-};
+}
 
-const mockUsers = [
-  // Organizers
-  { name: 'TechCon Global', email: 'contact@techcon.com', password: 'password123', role: 'organizer' },
-  { name: 'MusicFest Planners', email: 'booking@musicfest.com', password: 'password123', role: 'organizer' },
-  { name: 'Creative Workshops Inc.', email: 'learn@creative.com', password: 'password123', role: 'organizer' },
-  { name: 'Local Food Fairs', email: 'events@localfood.com', password: 'password123', role: 'organizer' },
+function imageUrl() {
+  const port = process.env.PORT || 5000;
+  const base = process.env.SEED_IMAGE_BASE_URL || `http://localhost:${port}`;
+  return `${base}/uploads/image.png`;
+}
 
-  // Regular users (12)
-  { name: 'Alice Johnson', email: 'alice@example.com', password: 'password123', role: 'user' },   // 0
-  { name: 'Bob Williams', email: 'bob@example.com', password: 'password123', role: 'user' },      // 1
-  { name: 'Charlie Brown', email: 'charlie@example.com', password: 'password123', role: 'user' }, // 2
-  { name: 'Diana Prince', email: 'diana@example.com', password: 'password123', role: 'user' },    // 3
-  { name: 'Ethan Hunt', email: 'ethan@example.com', password: 'password123', role: 'user' },      // 4
-  { name: 'Fiona Glenanne', email: 'fiona@example.com', password: 'password123', role: 'user' },  // 5
-  { name: 'George Costanza', email: 'george@example.com', password: 'password123', role: 'user' },// 6
-  { name: 'Hannah Abbott', email: 'hannah@example.com', password: 'password123', role: 'user' },  // 7
-  { name: 'Ian Malcolm', email: 'ian@example.com', password: 'password123', role: 'user' },       // 8
-  { name: 'Jane Smith', email: 'jane@example.com', password: 'password123', role: 'user' },       // 9
-  { name: 'Kevin Hart', email: 'kevin@example.com', password: 'password123', role: 'user' },      // 10
-  { name: 'Laura Palmer', email: 'laura@example.com', password: 'password123', role: 'user' },    // 11
-];
+function randomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-const toAttendees = (users) =>
-  users
-    .filter(Boolean) // remove any undefined entries just in case
-    .map((u) => ({
-      user: u._id,
-      isVerified: true,
-      verificationToken: undefined,
-      verificationTokenExpires: undefined,
-    }));
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-const importData = async () => {
+function futureDate(daysFromNow) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysFromNow);
+  d.setHours(10, 0, 0, 0);
+  return d;
+}
+
+async function importData() {
   try {
     await connectDB();
-
     await User.deleteMany();
     await Event.deleteMany();
-    console.log('🗑️  Old users and events destroyed...');
 
     const salt = await bcrypt.genSalt(10);
-    const usersToInsert = mockUsers.map((user) => ({
-      ...user,
-      password: bcrypt.hashSync(user.password, salt),
+
+    const organizerCount = 12;
+    const userCount = 120;
+    const categories = ['Workshop', 'Conference', 'Meetup', 'Webinar', 'Other'];
+    const cities = ['San Francisco, CA', 'Austin, TX', 'New York, NY', 'Chicago, IL', 'Boston, MA', 'Seattle, WA', 'Los Angeles, CA', 'Napa Valley, CA', 'Sedona, AZ'];
+
+    const organizers = Array.from({ length: organizerCount }).map((_, i) => ({
+      name: `Organizer ${i + 1}`,
+      email: `organizer${i + 1}@example.com`,
+      password: bcrypt.hashSync('password123', salt),
+      role: 'organizer',
     }));
 
-    const createdUsers = await User.insertMany(usersToInsert);
-    console.log('✅ Users imported...');
+    const users = Array.from({ length: userCount }).map((_, i) => ({
+      name: `User ${i + 1}`,
+      email: `user${i + 1}@example.com`,
+      password: bcrypt.hashSync('password123', salt),
+      role: 'user',
+    }));
 
-    const organizers = createdUsers.filter((u) => u.role === 'organizer');
-    const regularUsers = createdUsers.filter((u) => u.role === 'user');
+    const created = await User.insertMany([...organizers, ...users]);
+    const createdOrganizers = created.filter((u) => u.role === 'organizer');
+    const createdUsers = created.filter((u) => u.role === 'user');
 
-    console.log(`Organizers: ${organizers.length}, Regular users: ${regularUsers.length}`);
+    const eventCount = 60;
+    const events = [];
+    for (let i = 0; i < eventCount; i++) {
+      const org = createdOrganizers[i % createdOrganizers.length];
+      const date = futureDate(randomInt(10, 180));
+      const regDeadline = new Date(date.getTime() - randomInt(2, 7) * 24 * 60 * 60 * 1000);
+      const capacity = randomInt(50, 500);
+      const attendeePool = createdUsers.sort(() => Math.random() - 0.5).slice(0, Math.min(randomInt(10, 60), capacity));
+      const attendees = attendeePool.map((u) => ({ user: u._id, isVerified: true }));
+      const type = Math.random() < 0.5 ? 'in_person' : 'online';
+      const location = type === 'online' ? 'Online' : randomItem(cities);
+      const title = `Event ${i + 1}: ${randomItem(['Global Summit', 'Developer Conference', 'Creative Workshop', 'Music Fest', 'Tech Meetup'])}`;
+      const shortDescription = `Short preview for ${title}`.slice(0, 200);
+      const description = `Detailed description for ${title}.`;
+      const category = randomItem(categories);
 
-    if (organizers.length < 4) {
-      throw new Error(`Expected 4 organizers, got ${organizers.length}`);
+      events.push({
+        title,
+        shortDescription,
+        description,
+        type,
+        category,
+        date,
+        registrationDeadline: regDeadline,
+        location,
+        coverImageUrl: imageUrl(),
+        capacity,
+        organizer: org._id,
+        attendees,
+      });
     }
 
-    const [techCon, musicFest, creative, foodFest] = organizers;
-
-    const mockEvents = [
-      {
-        title: 'Global AI Summit 2025',
-        description:
-          'Join the brightest minds in AI to discuss the future of technology. Full-day event with keynotes, workshops, and networking opportunities.',
-        date: new Date('2025-10-22T09:00:00'),
-        location: 'San Francisco, CA',
-        organizer: techCon._id,
-        attendees: toAttendees([regularUsers[0], regularUsers[2], regularUsers[3], regularUsers[4]]),
-      },
-      {
-        title: 'Indie Rock Fest',
-        description:
-          'A 3-day outdoor festival featuring the best indie rock bands from around the world. Food trucks, art installations, and more.',
-        date: new Date('2025-11-15T12:00:00'),
-        location: 'Austin, TX',
-        organizer: musicFest._id,
-        attendees: toAttendees([regularUsers[1], regularUsers[3], regularUsers[4], regularUsers[5], regularUsers[6]]),
-      },
-      {
-        title: 'Web Dev Workshop: Advanced React',
-        description:
-          'A hands-on workshop covering advanced React patterns, state management, and performance optimization.',
-        date: new Date('2025-12-05T10:00:00'),
-        location: 'Online',
-        organizer: techCon._id,
-        attendees: toAttendees([regularUsers[0], regularUsers[1], regularUsers[7]]),
-      },
-      {
-        title: 'Watercolor Painting for Beginners',
-        description:
-          'Unleash your inner artist! A relaxing and fun introduction to watercolor painting techniques. All art supplies provided.',
-        date: new Date('2025-09-30T14:00:00'),
-        location: 'New York, NY',
-        organizer: creative._id,
-        attendees: toAttendees([regularUsers[5], regularUsers[6], regularUsers[8], regularUsers[9]]),
-      },
-      {
-        title: 'Downtown Food Truck Festival',
-        description:
-          'Experience the best local food on wheels! A delicious event for the whole family, featuring over 30 food trucks.',
-        date: new Date('2025-10-04T11:00:00'),
-        location: 'Chicago, IL',
-        organizer: foodFest._id,
-        attendees: toAttendees([
-          regularUsers[0],
-          regularUsers[1],
-          regularUsers[2],
-          regularUsers[3],
-          regularUsers[4],
-          regularUsers[10],
-        ]),
-      },
-      {
-        title: 'Introduction to Python Coding',
-        description:
-          'Start your journey into programming with this beginner-friendly coding bootcamp. Learn the basics of Python for data science and web apps.',
-        date: new Date('2025-11-08T09:30:00'),
-        location: 'Online',
-        organizer: techCon._id,
-        attendees: toAttendees([regularUsers[7], regularUsers[9], regularUsers[11]]),
-      },
-      {
-        title: 'Summer Marketing Conference',
-        description:
-          'A deep dive into the biggest trends in digital marketing. Great networking for marketing professionals.',
-        date: new Date('2025-08-10T11:00:00'),
-        location: 'Boston, MA',
-        organizer: techCon._id,
-        attendees: toAttendees([regularUsers[2], regularUsers[5], regularUsers[8]]),
-      },
-      {
-        title: 'Artisan Cheese & Wine Tasting',
-        description:
-          'An evening of sophisticated flavors. Sample a curated selection of artisan cheeses paired with fine wines.',
-        date: new Date('2025-07-20T19:00:00'),
-        location: 'Napa Valley, CA',
-        organizer: foodFest._id,
-        attendees: toAttendees([regularUsers[6], regularUsers[7], regularUsers[9], regularUsers[11]]),
-      },
-      {
-        title: 'Beginner Yoga Retreat',
-        description:
-          'A weekend retreat focused on mindfulness, yoga basics, and relaxation techniques for busy professionals.',
-        date: new Date('2025-09-05T08:00:00'),
-        location: 'Sedona, AZ',
-        organizer: creative._id,
-        attendees: toAttendees([regularUsers[3], regularUsers[4], regularUsers[10], regularUsers[11]]),
-      },
-      {
-        title: 'Street Food Night Market',
-        description:
-          'A vibrant night market with street food from around the world, live music, and local artisans.',
-        date: new Date('2025-10-18T18:00:00'),
-        location: 'Los Angeles, CA',
-        organizer: foodFest._id,
-        attendees: toAttendees([regularUsers[1], regularUsers[2], regularUsers[5], regularUsers[6], regularUsers[7]]),
-      },
-      {
-        title: 'JavaScript Performance Deep Dive',
-        description:
-          'Advanced workshop on profiling, optimizing, and debugging JavaScript performance issues.',
-        date: new Date('2025-11-25T10:00:00'),
-        location: 'Online',
-        organizer: techCon._id,
-        attendees: toAttendees([regularUsers[0], regularUsers[8], regularUsers[9], regularUsers[10]]),
-      },
-      {
-        title: 'Acoustic Evening Live',
-        description:
-          'An intimate acoustic evening with emerging singer-songwriters. Limited seating for a cozy experience.',
-        date: new Date('2025-12-12T20:00:00'),
-        location: 'Seattle, WA',
-        organizer: musicFest._id,
-        attendees: toAttendees([regularUsers[4], regularUsers[7], regularUsers[9], regularUsers[11]]),
-      },
-    ];
-
-    await Event.insertMany(mockEvents);
-    console.log('✅ Events imported...');
-
-    console.log('🎉 Data seeding completed successfully!');
+    await Event.insertMany(events);
+    console.log('Seeding completed');
     process.exit(0);
   } catch (error) {
-    console.error(`❌ Error with data import: ${error}`);
+    console.error('Seeding error:', error);
     process.exit(1);
   }
-};
+}
 
-const destroyData = async () => {
+async function destroyData() {
   try {
     await connectDB();
     await User.deleteMany();
     await Event.deleteMany();
-    console.log('🧹 Data successfully destroyed!');
+    console.log('Data destroyed');
     process.exit(0);
   } catch (error) {
-    console.error(`❌ Error with data destruction: ${error}`);
+    console.error('Destroy error:', error);
     process.exit(1);
   }
-};
+}
 
 if (process.argv[2] === '-d') {
   destroyData();

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useModal } from '../context/ModalContext';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const RegisterForm = () => {
   const { showModal } = useModal();
@@ -11,13 +12,26 @@ const RegisterForm = () => {
   
   const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const onSubmit = e => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const onSubmit = async e => {
     e.preventDefault();
+    setError('');
     if (password !== password2) {
-      console.log('Passwords do not match');
-    } else {
-      registerUser({ name, email, password }); 
+      const msg = 'Passwords do not match';
+      setError(msg);
+      toast.error(msg);
+      return;
     }
+    setLoading(true);
+    const result = await registerUser({ name, email, password });
+    if (!result?.ok) {
+      const msg = result?.msg || 'Registration failed';
+      setError(msg);
+      toast.error(msg);
+    }
+    setLoading(false);
   };
 
   return (
@@ -40,9 +54,10 @@ const RegisterForm = () => {
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password2">Confirm Password</label>
           <input type="password" name="password2" value={password2} onChange={onChange} required minLength="6" className="shadow-sm appearance-none border rounded w-full py-2 px-3" placeholder="******************"/>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full" type="submit">
+        <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full" type="submit" disabled={loading}>
           Sign Up
         </button>
+        {error && <p className="text-center text-red-600 text-sm mt-2">{error}</p>}
         <p className="text-center text-gray-600 text-sm mt-6">
           Already have an account?{' '}
           <button type="button" onClick={() => showModal('USER_LOGIN')} className="font-medium text-indigo-600 hover:text-indigo-500">

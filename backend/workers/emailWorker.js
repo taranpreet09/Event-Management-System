@@ -7,7 +7,7 @@ async function startEmailWorker() {
 
   while (true) {
     try {
-      const job = await dequeue(EMAIL_QUEUE_KEY, 0); // 0 = block forever
+      const job = await dequeue(EMAIL_QUEUE_KEY, 0); 
       if (!job) continue;
 
       const { payload } = job;
@@ -23,7 +23,6 @@ async function startEmailWorker() {
       console.log('✅ Email sent');
     } catch (err) {
       console.error('❌ Email worker error:', err);
-      // small delay to avoid tight error loop
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }

@@ -44,11 +44,13 @@ export const AuthProvider = ({ children }) => {
       const res = await api.post('/auth/login', formData);
       setToken(res.data.token);
       hideModal();
-      navigate('/dashboard'); // Uses the navigate from the context scope
+      navigate('/dashboard');
+      return { ok: true };
     } catch (err) {
-      console.error('Login failed:', err.response?.data?.msg || err.message);
+      const msg = err.response?.data?.msg || err.message;
+      return { ok: false, msg };
     }
-  }, [hideModal, navigate]); // Added navigate to dependency array
+  }, [hideModal, navigate]);
 
   const registerUser = useCallback(async (formData) => {
     try {
@@ -56,8 +58,10 @@ export const AuthProvider = ({ children }) => {
       setToken(res.data.token);
       hideModal();
       navigate('/dashboard');
+      return { ok: true };
     } catch (err) {
-      console.error('User registration failed:', err.response?.data?.msg || err.message);
+      const msg = err.response?.data?.msg || err.message;
+      return { ok: false, msg };
     }
   }, [hideModal, navigate]);
 
@@ -67,8 +71,10 @@ export const AuthProvider = ({ children }) => {
       setToken(res.data.token);
       hideModal();
       navigate('/dashboard');
+      return { ok: true };
     } catch (err) {
-      console.error('Organizer registration failed:', err.response?.data?.msg || err.message);
+      const msg = err.response?.data?.msg || err.message;
+      return { ok: false, msg };
     }
   }, [hideModal, navigate]);
   

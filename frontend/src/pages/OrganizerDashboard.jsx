@@ -12,8 +12,6 @@ import { useAuth } from '../context/AuthContext';
 const getMyEvents = () => api.get('/events/my-events');
 const deleteEvent = (id) => api.delete(`/events/${id}`);
 const getEventAttendees = (id) => api.get(`/events/${id}/attendees`);
-
-
 const OrganizerDashboard = () => {
   const { user } = useAuth();
   const [myEvents, setMyEvents] = useState([]);
@@ -56,9 +54,11 @@ const OrganizerDashboard = () => {
   };
 
 
-  useEffect(() => {
-    fetchMyEvents();
-  }, []);
+  useEffect(() => {
+    fetchMyEvents();
+    const intervalId = setInterval(fetchMyEvents, 10000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleDelete = async (eventId) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
@@ -170,11 +170,11 @@ const OrganizerDashboard = () => {
           </div>
           <div className="mt-3">
             <Link
-              to="/inbox"
-              className="inline-block text-indigo-600 hover:text-indigo-800 font-semibold text-sm"
-            >
-              Go to Inbox →
-            </Link>
+              to="/dashboard/inbox"
+              className="inline-block text-indigo-600 hover:text-indigo-800 font-semibold text-sm"
+            >
+              Go to Inbox →
+            </Link>
           </div>
         </div>
       </div>

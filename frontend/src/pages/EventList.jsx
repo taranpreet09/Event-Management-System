@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import EventCard from '../components/EventCard';
-import { getAllEvents } from '../api/events';
+import { getAllEvents, getRegisteredEvents } from '../api/events';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import { useAuth } from '../context/AuthContext';
 
 const registerForEventAPI = (eventId) => {
   const token = localStorage.getItem('token');
@@ -17,6 +18,8 @@ const registerForEventAPI = (eventId) => {
 };
 
 const EventList = () => {
+  const { isAuthenticated, user } = useAuth();
+
   // --- State ---
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +31,7 @@ const EventList = () => {
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [registeredEventIds, setRegisteredEventIds] = useState([]);
 
   // --- Debounce search ---
   useEffect(() => {
@@ -75,6 +79,22 @@ const EventList = () => {
     }
   }, [selectedDate]);
 
+  // --- Fetch registered events for logged-in user ---
+  useEffect(() => {
+    const fetchRegistered = async () => {
+      if (!isAuthenticated || user?.role !== 'user') return;
+      try {
+        const res = await getRegisteredEvents();
+        const ids = Array.isArray(res.data) ? res.data.map((e) => e._id) : [];
+        setRegisteredEventIds(ids);
+      } catch (err) {
+        console.error('Could not fetch registered events', err);
+      }
+    };
+
+    fetchRegistered();
+  }, [isAuthenticated, user]);
+
   // --- Main effect ---
   useEffect(() => {
     if (selectedDate) fetchEventsByDate();
@@ -94,6 +114,9 @@ const handleRegister = async (eventId) => {
   try {
     const res = await registerForEventAPI(eventId);
     toast.success(res.data.msg || "Registered successfully!");
+    setRegisteredEventIds((prev) =>
+      prev.includes(eventId) ? prev : [...prev, eventId]
+    );
   } catch (err) {
     toast.error(err.response?.data?.msg || "Failed to register.");
     console.error(err);
@@ -154,10 +177,18 @@ const handleRegister = async (eventId) => {
               <EventCard
                 eventId={event._id}
                 title={event.title}
-                date={new Date(event.date).toLocaleString()}
+                shortDescription={event.shortDescription}
+                category={event.category}
+                type={event.type}
+                dateISO={event.date}
+                registrationDeadlineISO={event.registrationDeadline}
                 location={event.location}
+                capacity={event.capacity}
+                attendeesCount={Array.isArray(event.attendees) ? event.attendees.filter((a) => a.isVerified).length : undefined}
+                coverImageUrl={event.coverImageUrl}
                 organizerName={event.organizer ? event.organizer.name : 'Unknown'}
                 onRegister={handleRegister}
+                isRegistered={registeredEventIds.includes(event._id)}
               />
             </motion.div>
           ))}
