@@ -10,10 +10,12 @@ import OrganisationRegisterForm from './components/OrganisationRegisterForm';
 import { ToastContainer } from 'react-toastify';
 
 // ⭐ 1. Import React hooks
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState,useRef } from 'react'; 
 import { useAuth } from './context/AuthContext';
 
+
 function App() {
+  const wsRef = useRef(null);
   const { modalView, hideModal } = useModal();
   const { user } = useAuth();
   
@@ -34,87 +36,75 @@ function App() {
   };
 
   useEffect(() => {
-    // Connect to your backend's port (5000)
-    const ws = new WebSocket('ws://localhost:5000');
+  // ⛔ Prevent multiple connections
+  if (wsRef.current) return;
 
-    ws.onopen = () => {
-      console.log('✅ [WebSocket] Connected to server.');
-    };
+  const ws = new WebSocket('ws://localhost:5000');
+  wsRef.current = ws;
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('🎁 [WebSocket] Message received:', data);
+  ws.onopen = () => {
+    console.log('✅ [WebSocket] Connected to server.');
+  };
 
-      if (data.type === 'EVENT_ADDED') {
-        // Backend now sends { type: 'EVENT_ADDED', event: {...}, userId }
-        alert(`🎉 NEW EVENT ADDED: ${data.event?.title || 'Unknown title'}`);
-      
-      } else if (data.type === 'EVENT_DELETED') {
-        // Backend sends { type: 'EVENT_DELETED', eventName, eventId, organizerId }
-        alert(`🗑️ EVENT DELETED: ${data.eventName || 'Unknown event'}`);
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('🎁 [WebSocket] Message received:', data);
 
-      } else if (data.type === 'BROADCAST_MESSAGE') {
-        // Optionally hide broadcast "new" notifications for the organizer who sent it
-        if (user && data.organizerId && data.organizerId === user.id) {
-          return;
-        }
+    // 🟣 BROADCAST MESSAGE
+    if (data.type === 'BROADCAST_MESSAGE') {
+      // organizer ko apna msg na dikhe
+      if (user && data.organizerId === user.id) return;
 
-        console.log('New broadcast!', data.payload);
-        
-        // Add new notification to the top of the list
-        setNotifications((prevNotifications) => [
-          { id: Date.now(), title: data.payload.title, text: data.payload.text, type: 'broadcast' },
-          ...prevNotifications, 
-        ]);
-        
-        setHasUnseenNotifications(true); 
-        
-        alert(`🔔 NEW NOTIFICATION: ${data.payload.title}`);
-      
-      } else if (data.type === 'INBOX_MESSAGE') {
-        if (!user) {
-          return;
-        }
+      setNotifications(prev => [
+        {
+          id: data.payload?.id || Date.now(),
+          title: data.payload.title,
+          text: data.payload.text,
+          type: 'broadcast',
+        },
+        ...prev,
+      ]);
 
-        const myUserId = user.id || user._id || user.userId;
-        if (data.toUserId && data.toUserId !== myUserId) {
-          return;
-        }
+      setHasUnseenNotifications(true);
+    }
 
-        setNotifications((prevNotifications) => [
-          {
-            id: Date.now(),
-            title: `New message from ${data.fromName || 'User'}`,
-            text: data.text,
-            type: 'inbox',
-            conversationId: data.conversationId,
-          },
-          ...prevNotifications,
-        ]);
-        setHasUnseenNotifications(true);
-        alert(`✉️ New message from ${data.fromName || 'User'}`);
-      
-      } else if (data.type === 'welcome') {
-        console.log(`[WebSocket] Server says: ${data.message}`);
-      }
-    };
+    // 🔵 INBOX MESSAGE
+    if (data.type === 'INBOX_MESSAGE') {
+      if (!user) return;
 
-    ws.onclose = () => {
-      console.log('❌ [WebSocket] Disconnected from server.');
-    };
+      const myUserId = user.id || user._id || user.userId;
+      if (data.toUserId !== myUserId) return;
 
-    ws.onerror = (error) => {
-      console.error('❌ [WebSocket] Error:', error);
-    };
+      setNotifications(prev => [
+        {
+          id: data.messageId || Date.now(),
+          title: `New message from ${data.fromName || 'User'}`,
+          text: data.text,
+          type: 'inbox',
+          conversationId: data.conversationId,
+        },
+        ...prev,
+      ]);
 
-    // Cleanup: Close the connection when the app unmounts
-    return () => {
-      // Avoid closing a socket that hasn't finished connecting yet (prevents warning)
-      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CLOSING)) {
-        ws.close();
-      }
-    };
-  }, [user]); // Re-run when user changes so we have the latest user in WS handler
+      setHasUnseenNotifications(true);
+    }
+  };
+
+  ws.onclose = () => {
+    console.log('❌ [WebSocket] Disconnected.');
+    wsRef.current = null;
+  };
+
+  ws.onerror = (err) => {
+    console.error('❌ [WebSocket] Error:', err);
+  };
+
+  return () => {
+    ws.close();
+    wsRef.current = null;
+  };
+}, []); // ✅ EMPTY dependency — VERY IMPORTANT
+// Re-run when user changes so we have the latest user in WS handler
 
   return (
     <div className="flex flex-col min-h-screen">

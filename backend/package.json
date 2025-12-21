@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "jest": "^30.2.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "mongoose": "^8.18.0",
@@ -23,6 +24,7 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^7.0.10",
     "redis": "^5.9.0",
+    "supertest": "^7.1.4",
     "ws": "^8.18.3"
   },
   "devDependencies": {

@@ -1,10 +1,8 @@
 const { createClient } = require("redis");
 
-const clientOptions = {
+const redisClient = createClient({
   url: process.env.REDIS_URL || "redis://localhost:6379",
-};
-
-const redisClient = createClient(clientOptions);
+});
 
 redisClient.on("error", (err) => {
   console.error("❌ Main Redis Error:", err);
@@ -16,10 +14,21 @@ subscriberClient.on("error", (err) => {
   console.error("❌ Redis Subscriber Error:", err);
 });
 
-redisClient
-  .connect()
-  .then(() => console.log("✅ Main Redis Client Connected (for Caching/Publishing)"))
-  .catch(console.error);
+(async () => {
+  try {
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
+      console.log("✅ Main Redis Client Connected");
+    }
+
+    if (!subscriberClient.isOpen) {
+      await subscriberClient.connect();
+      console.log("✅ Redis Subscriber Client Connected");
+    }
+  } catch (err) {
+    console.error("❌ Redis connection error:", err);
+  }
+})();
 
 module.exports = {
   redisClient,
