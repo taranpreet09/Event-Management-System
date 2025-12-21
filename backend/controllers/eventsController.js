@@ -4,6 +4,7 @@ const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto');
 const { redisClient } = require("../config/redis");
 const { enqueueEmailJob, enqueueNotificationJob } = require('../utils/queue');
+
 // ================================
 // Get all events (WITH CACHING)
 // ================================
@@ -58,88 +59,85 @@ exports.getAllEvents = async (req, res) => {
 // ================================
 // Create new event (clear cache)
 // ================================
-// ================================
-// Create new event (clear cache)
-// ================================
 exports.createEvent = async (req, res) => {
- if (req.user.role !== 'organizer') {
-   return res.status(403).json({ msg: 'Access denied: Organizers only' });
- }
+  if (req.user.role !== 'organizer') {
+    return res.status(403).json({ msg: 'Access denied: Organizers only' });
+  }
 
- const {
-   title,
-   shortDescription,
-   description,
-   type,
-   category,
-   date,
-   registrationDeadline,
-   location,
-   coverImageUrl,
-   capacity,
- } = req.body;
+  const {
+    title,
+    shortDescription,
+    description,
+    type,
+    category,
+    date,
+    registrationDeadline,
+    location,
+    coverImageUrl,
+    capacity,
+  } = req.body;
 
- try {
-   if (!title || !shortDescription || !description || !type || !category || !date || !registrationDeadline || !location || !coverImageUrl || !capacity) {
-     return res.status(400).json({ msg: 'All event fields are required.' });
-   }
+  try {
+    if (!title || !shortDescription || !description || !type || !category || !date || !registrationDeadline || !location || !coverImageUrl || !capacity) {
+      return res.status(400).json({ msg: 'All event fields are required.' });
+    }
 
-   const eventDate = new Date(date);
-   const regDeadline = new Date(registrationDeadline);
-   const now = new Date();
+    const eventDate = new Date(date);
+    const regDeadline = new Date(registrationDeadline);
+    const now = new Date();
 
-   if (isNaN(eventDate.getTime()) || isNaN(regDeadline.getTime())) {
-     return res.status(400).json({ msg: 'Invalid date or registration deadline.' });
-   }
+    if (isNaN(eventDate.getTime()) || isNaN(regDeadline.getTime())) {
+      return res.status(400).json({ msg: 'Invalid date or registration deadline.' });
+    }
 
-   if (eventDate <= now) {
-     return res.status(400).json({ msg: 'Event date must be in the future.' });
-   }
+    if (eventDate <= now) {
+      return res.status(400).json({ msg: 'Event date must be in the future.' });
+    }
 
-   if (regDeadline >= eventDate) {
-     return res.status(400).json({ msg: 'Registration deadline must be before the event date.' });
-   }
+    if (regDeadline >= eventDate) {
+      return res.status(400).json({ msg: 'Registration deadline must be before the event date.' });
+    }
 
-   if (regDeadline <= now) {
-     return res.status(400).json({ msg: 'Registration deadline must be in the future.' });
-   }
+    if (regDeadline <= now) {
+      return res.status(400).json({ msg: 'Registration deadline must be in the future.' });
+    }
 
-   if (Number(capacity) <= 0) {
-     return res.status(400).json({ msg: 'Capacity must be a positive number.' });
-   }
+    if (Number(capacity) <= 0) {
+      return res.status(400).json({ msg: 'Capacity must be a positive number.' });
+    }
 
-   const newEvent = new Event({
-     title,
-     shortDescription,
-     description,
-     type,
-     category,
-     date: eventDate,
-     registrationDeadline: regDeadline,
-     location,
-     coverImageUrl,
-     capacity: Number(capacity),
-     organizer: req.user.id,
-   });
+    const newEvent = new Event({
+      title,
+      shortDescription,
+      description,
+      type,
+      category,
+      date: eventDate,
+      registrationDeadline: regDeadline,
+      location,
+      coverImageUrl,
+      capacity: Number(capacity),
+      organizer: req.user.id,
+    });
 
-   const event = await newEvent.save();
+    const event = await newEvent.save();
 
-   // Enqueue notification job instead of publishing directly
-   await enqueueNotificationJob({
-     type: 'EVENT_ADDED',
-     event,
-     userId: req.user.id,
-   });
+    // Enqueue notification job instead of publishing directly
+    await enqueueNotificationJob({
+      type: 'EVENT_ADDED',
+      event,
+      userId: req.user.id,
+    });
 
-  await redisClient.del("events:all:all");
-  await redisClient.del("events:all:upcoming");
-  await redisClient.del("events:all:past");
+    await redisClient.del("events:all:all");
+    await redisClient.del("events:all:upcoming");
+    await redisClient.del("events:all:past");
 
-   res.json(event);
- } catch (err) {
-   console.error(err.message);
-   res.status(500).send('Server Error');
- }
+    res.json(event);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 };
 
 // ================================
@@ -165,7 +163,7 @@ exports.registerForEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
     const userId = req.user.id;
-        
+
     const event = await Event.findById(eventId);
     const user = await User.findById(userId);
 
@@ -290,7 +288,7 @@ exports.getEventById = async (req, res) => {
       console.log("🔥 CACHE HIT → event by ID");
       return res.json(JSON.parse(cachedEvent));
     }
-     console.log("❄ CACHE MISS → fetching event by id");
+    console.log("❄ CACHE MISS → fetching event by id");
     const event = await Event.findById(req.params.id)
       .populate('organizer', 'name')
       .populate('attendees.user', 'name email');
@@ -391,38 +389,35 @@ exports.updateEvent = async (req, res) => {
 // ================================
 // Delete Event
 // ================================
-// ================================
-// Delete Event
-// ================================
 exports.deleteEvent = async (req, res) => {
- try {
- let event = await Event.findById(req.params.id);
-if (!event) return res.status(404).json({ msg: 'Event not found' });
+  try {
+    let event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ msg: 'Event not found' });
 
-if (event.organizer.toString() !== req.user.id) {
-return res.status(401).json({ msg: 'User not authorized' });
-}
+    if (event.organizer.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
 
- await Event.findByIdAndDelete(req.params.id);
+    await Event.findByIdAndDelete(req.params.id);
 
- // Enqueue notification job instead of publishing directly
- await enqueueNotificationJob({
-   type: 'EVENT_DELETED',
-   eventId: req.params.id,
-   organizerId: req.user.id,
-   eventName: event.title,
- });
+    // Enqueue notification job instead of publishing directly
+    await enqueueNotificationJob({
+      type: 'EVENT_DELETED',
+      eventId: req.params.id,
+      organizerId: req.user.id,
+      eventName: event.title,
+    });
 
-  await redisClient.del("events:all:all");
-  await redisClient.del("events:all:upcoming");
-  await redisClient.del("events:all:past");
-  await redisClient.del(`event:${req.params.id}`);
+    await redisClient.del("events:all:all");
+    await redisClient.del("events:all:upcoming");
+    await redisClient.del("events:all:past");
+    await redisClient.del(`event:${req.params.id}`);
 
- res.json({ msg: 'Event removed' });
- } catch (err) {
- console.error(err.message);
- res.status(500).send('Server Error');
- }
+    res.json({ msg: 'Event removed' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 };
 
 // ================================
@@ -438,7 +433,7 @@ exports.getEventAttendees = async (req, res) => {
     }
 
     const eventWithAttendees = await Event.findById(req.params.id)
-      . populate('attendees.user', 'name email');
+      .populate('attendees.user', 'name email');
 
     res.json(eventWithAttendees.attendees);
   } catch (err) {
