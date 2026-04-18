@@ -75,6 +75,7 @@ exports.createEvent = async (req, res) => {
     location,
     coverImageUrl,
     capacity,
+    gallery,
   } = req.body;
 
   try {
@@ -117,6 +118,7 @@ exports.createEvent = async (req, res) => {
       location,
       coverImageUrl,
       capacity: Number(capacity),
+      gallery: Array.isArray(gallery) ? gallery : [],
       organizer: req.user.id,
     });
 
@@ -321,6 +323,7 @@ exports.updateEvent = async (req, res) => {
     location,
     coverImageUrl,
     capacity,
+    gallery,
   } = req.body;
 
   try {
@@ -369,6 +372,7 @@ exports.updateEvent = async (req, res) => {
           location,
           coverImageUrl,
           capacity: Number(capacity),
+          gallery: Array.isArray(gallery) ? gallery : [],
         },
       },
       { new: true }

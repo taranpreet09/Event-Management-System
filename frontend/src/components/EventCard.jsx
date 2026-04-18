@@ -6,15 +6,17 @@ const EventCard = ({ eventId, title, shortDescription, category, type, dateISO, 
   const { isAuthenticated } = useAuth();
   const [registering, setRegistering] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
-  const [deadlineCountdown, setDeadlineCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0 });
+  const [deadlineCountdown, setDeadlineCountdown] = useState({ d: 0, h: 0, m: 0 });
 
-  const placeholderSrc = `https://placehold.co/600x400/a0c4ff/333333?text=${title.replace(/\s+/g, '+')}`;
+  const placeholderSrc = `https://placehold.co/600x800/eeeeed/1a1c1c?font=playfair-display&text=${title.replace(/\s+/g, '+')}`;
   const imageSrc = !imageError && coverImageUrl ? coverImageUrl : placeholderSrc;
 
   const eventDate = dateISO ? new Date(dateISO) : null;
   const deadlineDate = registrationDeadlineISO ? new Date(registrationDeadlineISO) : null;
-  const dateDisplay = eventDate ? eventDate.toLocaleString() : '';
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const dateDisplay = eventDate ? `${monthNames[eventDate.getMonth()]} ${eventDate.getDate().toString().padStart(2, '0')}` : '';
 
   useEffect(() => {
     const tick = () => {
@@ -25,109 +27,148 @@ const EventCard = ({ eventId, title, shortDescription, category, type, dateISO, 
         const d = Math.floor(ms / (1000 * 60 * 60 * 24));
         const h = Math.floor((ms / (1000 * 60 * 60)) % 24);
         const m = Math.floor((ms / (1000 * 60)) % 60);
-        const s = Math.floor((ms / 1000) % 60);
-        return { d, h, m, s };
+        return { d, h, m };
       };
       setCountdown(toObj(evtMs));
       setDeadlineCountdown(toObj(dlMs));
     };
     tick();
-    const i = setInterval(tick, 1000);
+    const i = setInterval(tick, 60000); // Only tick every minute to reduce re-renders
     return () => clearInterval(i);
   }, [dateISO, registrationDeadlineISO]);
 
   const handleRegisterClick = async (e) => {
     e.preventDefault();
     if (isRegistered) return;
-    if (registering) return; // prevent double-click
+    if (registering) return;
     setRegistering(true);
     try {
       await onRegister(eventId);
     } finally {
-      // Always re-enable button whether success or failure
       setRegistering(false);
     }
   };
 
+  const formatCountdown = (cd) => {
+    if (cd.d > 0) return `${cd.d}d ${cd.h}h`;
+    if (cd.h > 0) return `${cd.h}h ${cd.m}m`;
+    if (cd.m > 0) return `${cd.m}m`;
+    return 'Now';
+  }
+
   return (
-    <Link
-      to={`/events/${eventId}`}
-      className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 ease-in-out flex flex-col group h-full"
-    >
-      <div className="relative">
+    <Link to={`/events/${eventId}`} className="group flex flex-col h-full cursor-pointer">
+      <div className="aspect-[4/3] overflow-hidden rounded-xl mb-4 relative bg-surface-container-highest">
         <img
           src={imageSrc}
           onError={() => setImageError(true)}
           alt={title}
-          className="w-full h-48 object-cover"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-all duration-300"></div>
-        <div className="absolute top-3 left-3 flex gap-2">
+        <div className="absolute top-4 left-4 flex gap-2">
           {type && (
-            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-white/90 text-gray-800 shadow">
+            <span className="px-2 py-0.5 bg-primary text-white text-[9px] font-bold uppercase tracking-wider rounded-sm shadow-sm">
               {type === 'online' ? 'Online' : 'In-person'}
             </span>
           )}
           {category && (
-            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-600 text-white shadow">
+            <span className="px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed text-[9px] font-bold uppercase tracking-wider rounded-sm shadow-sm">
               {category}
             </span>
           )}
         </div>
+        <div className="absolute top-4 right-4 h-9 w-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform">
+          <span className="material-symbols-outlined text-primary text-lg" data-icon="favorite">favorite</span>
+        </div>
       </div>
 
-      <div className="p-6 flex flex-col flex-grow">
-        <p className="text-sm text-gray-500 mb-2 font-medium">
-          Organized by: <span className="font-bold text-indigo-600">{organizerName}</span>
+      <div className="flex-1 flex flex-col">
+        <div className="flex justify-between items-baseline mb-1">
+          <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+            Organized by: <span className="text-primary font-bold">{organizerName}</span>
+          </p>
+        </div>
+
+        <h4 className="font-headline text-xl font-black text-primary leading-tight mb-2 group-hover:text-primary/70 transition-colors line-clamp-2">
+          {title}
+        </h4>
+        
+        <p className="text-xs text-on-surface-variant font-medium mb-6 line-clamp-2 italic">
+          {shortDescription || `Short preview for ${title}`}
         </p>
-        <h3 className="text-2xl font-bold font-heading mb-2 text-gray-800 line-clamp-2">{title}</h3>
-        {shortDescription && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{shortDescription}</p>
-        )}
-        <div className="text-gray-600 space-y-2 mb-4 text-sm">
-          <p><strong>Date:</strong> {dateDisplay}</p>
-          <p><strong>Location:</strong> {location}</p>
+
+        <div className="space-y-1.5 mb-4 pt-4 border-t border-outline-variant/30 flex-grow">
+          <div className="flex items-center gap-3 text-on-surface-variant">
+            <span className="material-symbols-outlined text-base" data-icon="calendar_today">calendar_today</span>
+            <span className="text-[11px] font-label uppercase tracking-wider font-bold">
+              {eventDate ? eventDate.toLocaleString() : 'TBA'}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-on-surface-variant">
+            <span className="material-symbols-outlined text-base" data-icon="location_on">location_on</span>
+            <span className="text-[11px] font-label uppercase tracking-wider font-bold">
+              {location || 'Online'}
+            </span>
+          </div>
           {capacity != null && (
-            <p>
-              <strong>Spots:</strong> {attendeesCount != null ? `${attendeesCount}/${capacity}` : capacity}
-            </p>
-          )}
-          {eventDate && (
-            <p className="text-indigo-700 font-semibold">
-              Starts in: {countdown.d}d:{String(countdown.h).padStart(2,'0')}h:{String(countdown.m).padStart(2,'0')}m:{String(countdown.s).padStart(2,'0')}s
-            </p>
-          )}
-          {deadlineDate && (
-            <p className="text-gray-700">
-              Reg closes in: {deadlineCountdown.d}d:{String(deadlineCountdown.h).padStart(2,'0')}h:{String(deadlineCountdown.m).padStart(2,'0')}m:{String(deadlineCountdown.s).padStart(2,'0')}s
-            </p>
+            <div className="flex items-center gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-base" data-icon="groups">groups</span>
+              <span className="text-[11px] font-label uppercase tracking-wider font-bold">
+                Spots: <span className="text-primary">{attendeesCount != null ? attendeesCount : 0}/{capacity}</span>
+              </span>
+            </div>
           )}
         </div>
 
-        <div className="mt-auto">
-          {isAuthenticated && (
-            isRegistered ? (
-              <div className="w-full font-bold py-2 px-4 rounded-lg bg-emerald-100 text-emerald-700 text-center cursor-default flex items-center justify-center gap-2">
-                <span>✓</span>
-                <span>Registered</span>
+        <div className="mt-auto space-y-4">
+          <div className="flex flex-col gap-1.5 px-4 py-3 bg-surface-container-low rounded-lg">
+            {eventDate && (
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-blue-600">Starts in:</span>
+                <span className="text-blue-600">{formatCountdown(countdown)}</span>
               </div>
+            )}
+            {deadlineDate && (
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <span>Reg closes in:</span>
+                <span>{formatCountdown(deadlineCountdown)}</span>
+              </div>
+            )}
+            {!eventDate && !deadlineDate && (
+               <div className="flex justify-center items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Time info not available
+               </div>
+            )}
+          </div>
+          
+          {isAuthenticated ? (
+            isRegistered ? (
+               <div className="w-full py-3.5 bg-surface-container-high rounded-lg text-primary text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-default border border-outline-variant/30 shadow-sm">
+                 <span className="material-symbols-outlined text-sm">check_circle</span>
+                 Registered
+               </div>
             ) : (
-              <button
-                onClick={handleRegisterClick}
-                disabled={registering}
-                className={`w-full font-bold py-2 px-4 rounded-lg transition-all duration-200 transform ${
-                  registering
-                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                    : 'bg-emerald-500 text-white hover:bg-emerald-600 hover:scale-105'
-                }`}
-              >
-                {registering ? 'Registering...' : 'Register'}
-              </button>
+               <button 
+                 onClick={(e) => {
+                     e.preventDefault();
+                     handleRegisterClick(e);
+                 }} 
+                 disabled={registering}
+                 className={`w-full py-3.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-sm ${
+                   registering ? 'bg-surface-dim text-on-surface-variant cursor-not-allowed' : 'bg-[#00A86B] text-white hover:brightness-95'
+                 }`}
+               >
+                 {registering ? 'Processing' : 'Register'}
+               </button>
             )
+          ) : (
+            <div className="w-full py-3.5 bg-surface-container-high rounded-lg text-on-surface-variant text-xs font-bold uppercase tracking-widest flex items-center justify-center italic shadow-sm">
+                 Sign in to Register
+            </div>
           )}
         </div>
       </div>
-  </Link>
+    </Link>
   );
 };
 

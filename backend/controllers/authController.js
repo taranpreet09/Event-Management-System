@@ -9,6 +9,7 @@ const createToken = (user) => {
             role: user.role, 
             name: user.name,
             email: user.email,
+            profileImage: user.profileImage || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(user.name)}&backgroundColor=1a1c1c&textColor=faf9f8`,
         },
     };
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });

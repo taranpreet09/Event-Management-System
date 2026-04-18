@@ -34,33 +34,38 @@ const RegisterForm = () => {
     setLoading(false);
   };
 
+  const inputStyles = "w-full bg-transparent border border-outline-variant/30 focus:ring-1 focus:border-primary transition-all py-3 px-3 font-body font-light placeholder:text-outline-variant text-sm rounded-lg";
+
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-center mb-6">Create Your Account</h2>
-      <form onSubmit={onSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">Full Name</label>
-          <input type="text" name="name" value={name} onChange={onChange} required className="shadow-sm appearance-none border rounded w-full py-2 px-3" placeholder="John Doe"/>
+    <div className="p-8">
+      <div className="mb-10">
+        <div className="font-headline text-2xl tracking-tighter text-primary mb-2">Create Your Account</div>
+        <p className="font-body text-on-surface-variant">Join The Curator community.</p>
+      </div>
+      <form onSubmit={onSubmit} className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold" htmlFor="name">Full Name</label>
+          <input type="text" name="name" value={name} onChange={onChange} required className={inputStyles} placeholder="John Doe"/>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">Email Address</label>
-          <input type="email" name="email" value={email} onChange={onChange} required className="shadow-sm appearance-none border rounded w-full py-2 px-3" placeholder="you@example.com"/>
+        <div className="flex flex-col gap-2">
+          <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold" htmlFor="email">Email Address</label>
+          <input type="email" name="email" value={email} onChange={onChange} required className={inputStyles} placeholder="you@example.com"/>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">Password</label>
-          <input type="password" name="password" value={password} onChange={onChange} required minLength="6" className="shadow-sm appearance-none border rounded w-full py-2 px-3" placeholder="******************"/>
+        <div className="flex flex-col gap-2">
+          <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold" htmlFor="password">Password</label>
+          <input type="password" name="password" value={password} onChange={onChange} required minLength="6" className={inputStyles} placeholder="••••••••••••"/>
         </div>
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password2">Confirm Password</label>
-          <input type="password" name="password2" value={password2} onChange={onChange} required minLength="6" className="shadow-sm appearance-none border rounded w-full py-2 px-3" placeholder="******************"/>
+        <div className="flex flex-col gap-2">
+          <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold" htmlFor="password2">Confirm Password</label>
+          <input type="password" name="password2" value={password2} onChange={onChange} required minLength="6" className={inputStyles} placeholder="••••••••••••"/>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full" type="submit" disabled={loading}>
-          Sign Up
+        <button className="w-full bg-primary text-on-primary font-label text-sm font-bold uppercase tracking-widest py-4 px-4 rounded-lg hover:opacity-90 transition-opacity mt-2" type="submit" disabled={loading}>
+          {loading ? 'Creating...' : 'Sign Up'}
         </button>
-        {error && <p className="text-center text-red-600 text-sm mt-2">{error}</p>}
-        <p className="text-center text-gray-600 text-sm mt-6">
+        {error && <p className="text-center text-error text-sm font-body">{error}</p>}
+        <p className="text-center text-on-surface-variant text-sm font-body">
           Already have an account?{' '}
-          <button type="button" onClick={() => showModal('USER_LOGIN')} className="font-medium text-indigo-600 hover:text-indigo-500">
+          <button type="button" onClick={() => showModal('USER_LOGIN')} className="font-semibold text-primary hover:opacity-60 transition-opacity">
             Log In
           </button>
         </p>

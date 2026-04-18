@@ -1,30 +1,81 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400&family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-heading: 'Poppins', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-secondary: #10b981;
-  --color-text: #374151;
-  --color-text-light: #6b7280;
-  --color-heading: #111827;
-  --color-background: #f9fafb;
-  --color-surface: #ffffff;
-  --color-border: #e5e7eb;
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 11%;
+    --primary: 0 0% 11%;
+    --primary-foreground: 0 0% 98%;
+    --surface: 0 0% 100%;
+    --outline-variant: 0 0% 89%;
+    --tertiary-fixed: 45 40% 92%;
+    --on-tertiary-fixed: 45 10% 20%;
+  }
+
+  body {
+    @apply bg-[#faf9f8] text-[#1a1c1c] font-body antialiased;
+    letter-spacing: -0.01em;
+  }
 }
 
-body {
-  font-family: var(--font-body);
-  color: var(--color-text);
-  background-color: var(--color-background);
+@layer components {
+  .font-headline {
+    font-family: 'Noto Serif', serif;
+  }
+  
+  .font-body {
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .font-label {
+    font-family: 'Manrope', sans-serif;
+    letter-spacing: 0.15em;
+  }
+
+  .silk-gradient {
+    @apply bg-gradient-to-br from-[#1a1c1c] via-[#2d2f2f] to-[#1a1c1c];
+  }
+
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-primary/10 rounded-full hover:bg-primary/20 transition-colors;
+  }
+
+  .limit-lines-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  color: var(--color-heading);
-}
+/* Base Tailwind Extend (Injecting via style if needed, but since we use CDN in some places, we define these classes) */
+.bg-surface { background-color: #ffffff; }
+.bg-surface-container-low { background-color: #f4f3f2; }
+.bg-surface-container-lowest { background-color: #ffffff; }
+.text-primary { color: #1a1c1c; }
+.border-outline-variant\/10 { border-color: rgba(0,0,0, 0.05); }
+.border-outline-variant\/20 { border-color: rgba(0,0,0, 0.1); }
+.text-on-surface-variant { color: #5c5e5e; }
+.bg-primary { background-color: #1a1c1c; }
+.text-on-primary { color: #ffffff; }
+.bg-tertiary-fixed-dim { background-color: #e6e0d4; }
+.text-on-tertiary-fixed-variant { color: #4d4639; }
+.bg-error\/10 { background-color: rgba(186, 26, 26, 0.1); }
+.text-error { color: #ba1a1a; }
+.border-error\/20 { border-color: rgba(186, 26, 26, 0.2); }

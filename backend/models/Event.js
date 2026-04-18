@@ -65,6 +65,10 @@ const EventSchema = new Schema({
         verificationToken: String,
         verificationTokenExpires: Date,
     }],
+    gallery: [{
+        imageUrl: { type: String, required: true },
+        tagline: { type: String }
+    }],
 }, { timestamps: true });
 EventSchema.methods.createRegistrationToken = function(userId) {
 

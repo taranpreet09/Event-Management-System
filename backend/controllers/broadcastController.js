@@ -17,6 +17,7 @@ exports.createBroadcast = async (req, res) => {
       title,
       text,
       organizerId: req.user.id,
+      organizerName: req.user.name || 'Organizer',
     };
 
     await enqueueNotificationJob({

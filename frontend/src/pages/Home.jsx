@@ -2,152 +2,327 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
 
-// --- Icon Components ---
-const CalendarCheckIcon = (props) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-    <line x1="16" x2="16" y1="2" y2="6" />
-    <line x1="8" x2="8" y1="2" y2="6" />
-    <line x1="3" x2="21" y1="10" y2="10" />
-    <path d="m9 16 2 2 4-4" />
-  </svg>
-);
-
-const UsersIcon = (props) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
-
-const TicketIcon = (props) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <path d="M2 9a3 3 0 0 1 0 6v1a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-1a3 3 0 0 1 0-6V8a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-    <path d="M13 5v2" />
-    <path d="M13 17v2" />
-    <path d="M13 11v2" />
-  </svg>
-);
-
-const ArrowRightIcon = (props) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <path d="M5 12h14" />
-    <path d="m12 5 7 7-7 7" />
-  </svg>
-);
-
 const Home = () => {
   const { showModal } = useModal();
   const triggered = useRef(false);
 
+  // Proactive modal
   useEffect(() => {
     const triggerModal = () => {
       if (sessionStorage.getItem('proactiveModalShown')) return;
       if (triggered.current) return;
-
       triggered.current = true;
       showModal('CHOICE');
       sessionStorage.setItem('proactiveModalShown', 'true');
-
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timerId);
     };
-
     const handleScroll = () => {
       const scrollPercentage = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
       if (scrollPercentage > 25) triggerModal();
     };
-
     const timerId = setTimeout(triggerModal, 7000);
     window.addEventListener('scroll', handleScroll);
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timerId);
     };
   }, [showModal]);
 
+  // Reveal animation & Parallax
+  useEffect(() => {
+    const heroContent = document.getElementById('hero-content');
+    if (heroContent) {
+      const lines = heroContent.querySelectorAll('span, div, h1 span');
+      lines.forEach(el => {
+        el.classList.remove('translate-y-full', 'translate-y-4', 'opacity-0');
+      });
+    }
+
+    const revealCallback = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    };
+    const revealObserver = new IntersectionObserver(revealCallback, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    const parallaxBg = document.querySelector('#hero-parallax img');
+    const scrollHandler = () => {
+      const scrollY = window.scrollY;
+      if (parallaxBg && scrollY < window.innerHeight) {
+        parallaxBg.style.transform = `translateY(${scrollY * 0.3}px)`;
+      }
+    };
+    window.addEventListener('scroll', scrollHandler);
+
+    return () => {
+      revealObserver.disconnect();
+      window.removeEventListener('scroll', scrollHandler);
+    }
+  }, []);
+
   return (
-    <div className="bg-gray-50 text-gray-800">
-      <main className="relative overflow-hidden">
-        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-gray-100 -z-10" />
-        <div aria-hidden="true" className="absolute -top-48 left-1/2 -z-10 h-[42.375rem] w-[42.375rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-[#93c5fd] to-[#3b82f6] opacity-20" />
+    <>
+      <style>{`
+        /* Removed tc-bleed as App.jsx no longer adds padding/margin to main wrapping element */
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .silk-gradient {
+            background: linear-gradient(135deg, #00050d 0%, #121f2c 100%);
+        }
+        .glass-panel {
+            background: rgba(250, 249, 248, 0.7);
+            backdrop-filter: blur(20px);
+        }
+        
+        /* Reveal Animation Base */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.21, 1.02, 0.49, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-        <div className="container mx-auto px-6 lg:px-8 pt-24 pb-20 sm:pt-32 sm:pb-28 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900">
-            Organize, Manage, and Host
-            <span className="block text-indigo-600">Unforgettable Events</span>
-          </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-600">
-            From small meetups to large-scale conferences, EventManager provides all the tools you need to create successful and engaging events, seamlessly.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Link to="/events" className="rounded-md bg-indigo-600 px-6 py-3 text-lg font-semibold text-white shadow-lg hover:bg-indigo-500 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 transition">
-              Browse Events
-            </Link>
-            <Link to="/dashboard" className="group flex items-center gap-x-2 text-lg font-semibold text-gray-900 hover:text-indigo-600 transition">
-              Manage Your Events <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
-        </div>
-      </main>
+        /* Collage Animation */
+        @keyframes collageReveal {
+            0% { opacity: 0; transform: scale(1.05) translateY(20px); filter: grayscale(100%) brightness(50%); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: grayscale(20%) brightness(85%); }
+        }
+        .collage-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            animation: collageReveal 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            border-radius: 0.5rem;
+        }
 
-      <section id="features" className="bg-white py-20 sm:py-28">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="max-w-2xl mx-auto lg:mx-0">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Everything You Need, All in One Place</h2>
-            <p className="mt-4 text-lg text-gray-600">Our platform is designed to be powerful for organizers yet simple for attendees.</p>
-          </div>
+        /* Image Hover Effect */
+        .image-container {
+            overflow: hidden;
+            position: relative;
+        }
+        .image-container img {
+            transition: transform 1s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+        .image-container:hover img {
+            transform: scale(1.08);
+        }
+        .image-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 5, 13, 0);
+            transition: background 0.4s ease;
+        }
+        .image-container:hover .image-overlay {
+            background: rgba(0, 5, 13, 0.15);
+        }
+      `}</style>
 
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-            <div className="flex flex-col items-start p-8 bg-gray-50 rounded-2xl shadow-sm hover:shadow-lg">
-              <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-100 text-indigo-600 mb-6">
-                <CalendarCheckIcon className="h-6 w-6" />
+      <div className="bg-background text-on-surface font-body selection:bg-primary-fixed selection:text-primary w-full overflow-hidden">
+        <main className="w-full">
+          {/* Hero Section */}
+          <section className="relative min-h-[70vh] md:min-h-screen flex items-center justify-center pt-24 pb-16 md:py-32 px-4 overflow-hidden bg-surface">
+            
+            <div className="absolute inset-0 z-0" id="hero-parallax">
+              {/* Collage Grid - Responsive */}
+              <div className="absolute top-[-10%] w-full h-[120%] grid grid-cols-2 md:grid-cols-4 grid-rows-4 md:grid-rows-3 gap-2 md:gap-4 p-2 md:p-4 opacity-75">
+                <div className="col-span-1 row-span-1 md:row-span-2 overflow-hidden shadow-2xl">
+                  <img className="collage-img" style={{ animationDelay: '0.2s' }} src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&q=80" alt="Gala" />
+                </div>
+                <div className="col-span-1 md:col-span-2 row-span-1 overflow-hidden shadow-2xl md:mt-12">
+                  <img className="collage-img" style={{ animationDelay: '0.5s' }} src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80" alt="Outdoor" />
+                </div>
+                <div className="col-span-2 md:col-span-1 row-span-2 overflow-hidden shadow-2xl">
+                  <img className="collage-img" style={{ animationDelay: '0.8s' }} src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1000&q=80" alt="Dining" />
+                </div>
+                <div className="col-span-2 md:col-span-2 row-span-2 md:row-span-1 overflow-hidden shadow-2xl md:mb-12">
+                  <img className="collage-img object-center" style={{ animationDelay: '1.2s' }} src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=1200&q=80" alt="Concert" />
+                </div>
+                <div className="col-span-1 row-span-1 overflow-hidden shadow-2xl">
+                  <img className="collage-img" style={{ animationDelay: '1.6s' }} src="https://images.unsplash.com/photo-1478147427282-58a87a433117?w=1000&q=80" alt="Catering" />
+                </div>
+                <div className="col-span-1 row-span-1 overflow-hidden shadow-2xl md:mt-8">
+                  <img className="collage-img" style={{ animationDelay: '2.0s' }} src="https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=1000&q=80" alt="Decor" />
+                </div>
               </div>
-              <h3 className="text-xl font-semibold">Seamless Event Creation</h3>
-              <p className="mt-2 text-base text-gray-600">Effortlessly create and customize your event pages. Add schedules, speaker bios, and venue details in minutes.</p>
+              
+              {/* Overlays to ensure text readability without hiding images */}
+              <div className="absolute inset-0 bg-surface/10"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-surface/20 via-transparent to-surface/80"></div>
             </div>
 
-            <div className="flex flex-col items-start p-8 bg-gray-50 rounded-2xl shadow-sm hover:shadow-lg">
-              <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-100 text-indigo-600 mb-6">
-                <TicketIcon className="h-6 w-6" />
+            <div className="relative z-10 text-center max-w-5xl mx-auto flex flex-col items-center">
+              <div id="hero-content" className="flex flex-col items-center w-full">
+                <span className="inline-block font-label text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] text-on-surface-variant mb-6 reveal">
+                  Established 2024 — Premiere Curation
+                </span>
+                
+                <h1 className="font-headline text-5xl sm:text-6xl md:text-8xl font-black text-primary leading-[1.05] tracking-tight mb-8 z-20 reveal" style={{ transitionDelay: '100ms' }}>
+                  Crafting <span className="italic font-light">Unforgettable</span>
+                  <br className="hidden md:block" /> Moments
+                </h1>
+                
+                <p className="max-w-2xl text-base md:text-lg text-on-surface-variant font-medium mb-12 leading-relaxed reveal" style={{ transitionDelay: '200ms' }}>
+                  We transcend traditional event planning, offering an editorial approach to experience design. For those who demand the immaculate.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center w-full sm:w-auto reveal" style={{ transitionDelay: '300ms' }}>
+                  <Link to="/events" className="silk-gradient text-on-primary px-10 py-4 rounded-lg font-label text-xs md:text-sm font-extrabold uppercase tracking-widest shadow-xl hover:scale-105 transition-all duration-300 w-full sm:w-auto">
+                    Inquire Now
+                  </Link>
+                  <Link to="/dashboard" className="group flex items-center justify-center gap-3 font-label text-xs md:text-sm font-bold uppercase tracking-widest text-primary w-full sm:w-auto">
+                    View Portfolio 
+                    <span className="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                  </Link>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold">Easy Ticketing & RSVP</h3>
-              <p className="mt-2 text-base text-gray-600">Manage registrations and sell tickets directly from your event page. Track attendees and get real-time insights.</p>
             </div>
+          </section>
 
-            <div className="flex flex-col items-start p-8 bg-gray-50 rounded-2xl shadow-sm hover:shadow-lg">
-              <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-100 text-indigo-600 mb-6">
-                <UsersIcon className="h-6 w-6" />
+          {/* Services Section */}
+          <section className="py-16 md:py-32 bg-surface-container-low px-4 sm:px-8 md:px-12">
+            <div className="max-w-[1400px] mx-auto">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-6 md:gap-8 reveal">
+                <div className="max-w-2xl">
+                  <h2 className="font-headline text-3xl sm:text-4xl md:text-6xl font-bold text-primary mb-4 md:mb-8 leading-tight">Mastery in Every <br className="hidden sm:block"/>Detail</h2>
+                  <p className="text-on-surface-variant text-base md:text-lg leading-relaxed font-light max-w-lg">
+                    We transcend traditional event planning, offering an editorial approach to experience design. From heritage venues to avant-garde gastronomy.
+                  </p>
+                </div>
+                <div className="pb-2">
+                  <div className="h-[1px] w-32 bg-primary mb-4 opacity-20"></div>
+                  <span className="font-label text-xs uppercase tracking-widest text-primary font-bold">Our Expertise</span>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold">Attendee Engagement</h3>
-              <p className="mt-2 text-base text-gray-600">Keep your audience engaged with tools for communication, feedback collection, and community building before and after the event.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12">
+                {/* Service 1 */}
+                <div className="flex flex-col group cursor-default reveal" style={{ transitionDelay: '100ms' }}>
+                  <div className="aspect-[4/5] rounded-xl mb-6 md:mb-8 bg-surface-container image-container">
+                    <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDy-T9tzA0hvVh5QUxNA4PFFUMXN1pIMUvdrluGs8WB5EnQd9yjcid8P9oNKzCOnEDZfQG-KldXp2Yu2IL09AXfjMBOwI9sDuy8lwLlaJRFIp3uFnw2NqSvVVp2HP1Ofm_hZHf7WtIz3oGxs4xwLxZ4RdFmjq3SJhc8oG4LctPVtValvJLY4GaYv7I6na0w1V_QGKOcDHvFKJhP9VbXOFNP0ZplwOGbZqxCVgMS0Ak5_ITC-P0_4p391Qi8tzJZ0YyN8lhENg4Pww" alt="Service 1"/>
+                    <div className="image-overlay"></div>
+                  </div>
+                  <h3 className="font-headline text-xl md:text-2xl font-bold mb-3 md:mb-4 text-primary">Seamless Event Planning</h3>
+                  <p className="text-on-surface-variant font-light leading-relaxed mb-4 md:mb-6 text-sm md:text-base">Logistical precision meets creative intuition. We manage the complex so you can inhabit the moment.</p>
+                  <span className="text-primary font-label text-xs font-bold uppercase tracking-widest border-b border-primary/20 pb-1 w-fit group-hover:border-primary transition-colors">Explore Planning</span>
+                </div>
+                
+                {/* Service 2 */}
+                <div className="flex flex-col group cursor-default md:mt-24 reveal" style={{ transitionDelay: '300ms' }}>
+                  <div className="aspect-[4/5] rounded-xl mb-6 md:mb-8 bg-surface-container image-container">
+                    <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5D-DqXeEI0fiPQoIv3A7QyIQSl71s3uLWTd4XmMx3PRxH_2-FSFMPK2Ldgrt1l-Q0rN8lWWjk3LAsoccGSPwYvUaF1zrWX_FbvoBwtV8HehUfLpV6jfd9jZre9GH4NBCtTQBErCe34qBUb-CO96Qoz9Fl0k6IUCSmS-cZFHfjWbeT_Fbtb7YaFnoxwf6KWivQS6LlaGrGdprOi1v6ePRlXzP3WleuOzhkwXqV6qUOSUFCUfZBhtdXwYUYQNgE_yLaZI5ojOQfAA" alt="Service 2"/>
+                    <div className="image-overlay"></div>
+                  </div>
+                  <h3 className="font-headline text-xl md:text-2xl font-bold mb-3 md:mb-4 text-primary">Exquisite Catering</h3>
+                  <p className="text-on-surface-variant font-light leading-relaxed mb-4 md:mb-6 text-sm md:text-base">A sensory journey tailored to your palate. Michelin-standard menus served with effortless grace.</p>
+                  <span className="text-primary font-label text-xs font-bold uppercase tracking-widest border-b border-primary/20 pb-1 w-fit group-hover:border-primary transition-colors">View Menus</span>
+                </div>
+                
+                {/* Service 3 */}
+                <div className="flex flex-col group cursor-default reveal" style={{ transitionDelay: '500ms' }}>
+                  <div className="aspect-[4/5] rounded-xl mb-6 md:mb-8 bg-surface-container image-container">
+                    <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9sbdC-Fe-lbTT0HtQVyaTSySom3FtRZAXr5S0foCPAiLU_5Bf6tmLr2eLg4cDAyLsDD4wm8getdrFDSlSuxcDTcMszdtq-7HcHehEYqfUMwhpyOUaOFuZJWlDMHul6dNf7686bf4GSZo4oUGnQUQHnMU6jcnFFDFO87XbkIfWg7ADMAgpAs8MI7TNGcunApvtiJxH2jDRJs24YKN-BVBj_yAEl9cbfcXxtUhUoNUcgQBDJt33hM8wM5FWhz-3Ta5BfuintoYvgQ" alt="Service 3"/>
+                    <div className="image-overlay"></div>
+                  </div>
+                  <h3 className="font-headline text-xl md:text-2xl font-bold mb-3 md:mb-4 text-primary">Immersive Experiences</h3>
+                  <p className="text-on-surface-variant font-light leading-relaxed mb-4 md:mb-6 text-sm md:text-base">Atmospheric design that lingers in memory. We create worlds that tell your unique story.</p>
+                  <span className="text-primary font-label text-xs font-bold uppercase tracking-widest border-b border-primary/20 pb-1 w-fit group-hover:border-primary transition-colors">Discover Magic</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      <footer className="bg-gray-900 text-white">
-        <div className="container mx-auto py-12 px-6 lg:px-8">
-          <div className="flex justify-between items-center flex-wrap gap-8">
-            <div>
-              <h3 className="text-xl font-bold">EventManager</h3>
-              <p className="text-gray-400 mt-2">Making every event a success.</p>
+          {/* Portfolio Section */}
+          <section className="py-16 md:py-32 bg-surface">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                <div className="md:col-span-5 order-2 md:order-1 reveal">
+                  <span className="bg-tertiary-fixed-dim text-on-tertiary-fixed-variant px-4 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest mb-4 md:mb-6 inline-block">The Portfolio</span>
+                  <h2 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-4 md:mb-8 leading-[1.1]">Elite Events <br/>Curated by Hand</h2>
+                  <p className="text-on-surface-variant text-base md:text-lg mb-6 md:mb-10 leading-relaxed font-light">
+                    From private island retreats to metropolitan heritage galas, our portfolio represents the pinnacle of intentional celebration.
+                  </p>
+                  <Link to="/events" className="bg-surface-container-high text-on-surface px-8 md:px-10 py-3 md:py-4 rounded-lg font-label text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-surface-container-highest transition-colors inline-block">
+                    Request Access
+                  </Link>
+                </div>
+                
+                <div className="md:col-span-7 order-1 md:order-2 grid grid-cols-2 gap-3 md:gap-4">
+                  <div className="space-y-3 md:space-y-4">
+                    <div className="image-container rounded-xl reveal" style={{ transitionDelay: '200ms' }}>
+                      <img className="w-full aspect-[3/4] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSW2Y5-0cKlCc1TGKdWwXVnu17F3roE0us3CFoQ-M40EO240e0S0bcxb37TFgCU9S6RBfMTGs_KyuFl_kNuGGP72cZjqT-wPBD3vlwGFIvfOuAEGbmCMMGf4wuvj6w4hARXqW0T4ErpFs0hMEkVytiQYOJSgfUwGTJi_Ujx5bjxXBeHr1cpSIzIQIRTr5DbbhyeHyohZf22ONUTXagFYb5wZ2C8QLWkj_HQlPjU9Jl_-YDQfGFoa1yqurlLol_h2vY0bx_A_kOVA" alt="Portfolio 1"/>
+                      <div className="image-overlay"></div>
+                    </div>
+                    <div className="image-container rounded-xl reveal" style={{ transitionDelay: '400ms' }}>
+                      <img className="w-full aspect-square object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvMuUc8ecU9yyYOpyZ7xW690CSWHhOSl4M-AYYsZ5QaOaEkZ9a0zIW-Jm7ecm3oVGpYRg3BtEQXgeXX5EfDqETUrL76_TmO_IkLeX5RqTWGfHaf52IbmsD8SStZkfwGdxeJyYKvK-PIHOKJIMh24GaGdgk8Pu9aPbN_G4qXP55ixbnh8wUN8feJLtosGh-5l_vSK27DxfZKn4mR0SXR_k_4YFyEwc57TaMKOgPjdD9XZY-BsCY5T7L7o3m6zyUlB1CBvxpRWt7fA" alt="Portfolio 2"/>
+                      <div className="image-overlay"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3 md:space-y-4 pt-8 md:pt-12">
+                    <div className="image-container rounded-xl reveal" style={{ transitionDelay: '300ms' }}>
+                      <img className="w-full aspect-square object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHXygQeoDjIIXtrgyV46-fy7yusFp0LQBYM9zT0ZeqpURzvZJ7iQg7Jbn_gEXqO_DtxvjfNpjwoaArcAu_vMByvafGMNSydbcDJ_6zgBcxRQbGA_dymsyXZW9UmuiocrMf-jH81W08QaF71bPHddFGsYzEf0ecRPZrMZk_nxeRitP9e9XHU0N4oLH-bHzJjzZ5PP47YFCiZ94F4fK2aiXPXQ2iWStKySpuU9RmnpGjGh7oTnp9SmsOU_y6tlomuB7tcKGV2l2TMA" alt="Portfolio 3"/>
+                      <div className="image-overlay"></div>
+                    </div>
+                    <div className="image-container rounded-xl reveal" style={{ transitionDelay: '500ms' }}>
+                      <img className="w-full aspect-[3/4] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCks2XV2m2L7SYClKHRVmi1jxn5CuwCqtZegO1nI7e37YwoxQYA-Kt87PmdpnNYJEXpScpf0F3vdwUtAu8ROJyVfxDLI-wh9zVafla-GPVxKpXLBhZ_kGd42DJrhILZej55mP6Rexky-LRy0EA5uJvBi48EXiKCE0DOqV1YAoPQKsP9z1k2MpFlq2qtRYcQqTcnPgUCr5Bk2RNO0Gr4S0zcfWfHSCIpe00E2srJsqu-nn2TFu24lSq7rlZz2SI0XMRgInsNOmCQtQ" alt="Portfolio 4"/>
+                      <div className="image-overlay"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-x-8">
-              <Link to="/events" className="text-gray-300 hover:text-white">Events</Link>
-              <Link to="/dashboard" className="text-gray-300 hover:text-white">Dashboard</Link>
-              <Link to="#" className="text-gray-300 hover:text-white">Contact</Link>
+          </section>
+
+          {/* Inquiry Section */}
+          <section className="py-16 md:py-32 bg-surface-container-low relative overflow-hidden">
+            <div className="absolute inset-0 z-0">
+              <img className="w-full h-full object-cover opacity-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHqm12l51Ta93qn8cD70PhrRMeyEP5uXyLwZ37A7EH0iwokZNQIy8LIlS1UJ32VTl3Ly9ivkHeFG322liRqVij7y9qoNnI2r30bXveCL66MLu3of_sF7FJxoMuSScXsamSvyNzbu4nBbCP50mYp-GzdUBla9rdjGA0zIaPKXTiL-N8s5msSvkRxq5UiCjH88ob02otUtQt-kLjv98zTq02RXCYyIyk0uWX5nzjjUG91t41WkCSON-PQeclSylVEJyzUR8DC7WwXA" alt="Background Texture"/>
             </div>
-          </div>
-          <div className="mt-12 border-t border-gray-800 pt-8 text-center text-gray-500">
-            <p>&copy; {new Date().getFullYear()} EventManager. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+            
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 reveal">
+              <div className="glass-panel p-8 sm:p-12 md:p-20 rounded-xl shadow-sm border border-outline-variant/10">
+                <div className="text-center mb-10 md:mb-16">
+                  <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4 text-primary">Start the Curation</h2>
+                  <p className="text-on-surface-variant font-light text-sm md:text-base">Inquire about our availability for your next marquee event.</p>
+                </div>
+                
+                <form action="#" className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10" onSubmit={(e) => { e.preventDefault(); showModal('CHOICE'); }}>
+                  <div className="flex flex-col gap-2 text-left">
+                    <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Full Name</label>
+                    <input className="bg-transparent border-0 border-b border-outline-variant/30 focus:ring-0 focus:border-primary transition-all py-3 px-0 font-light placeholder:text-outline-variant text-sm md:text-base" placeholder="Julian Vane" type="text"/>
+                  </div>
+                  <div className="flex flex-col gap-2 text-left">
+                    <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Email Address</label>
+                    <input className="bg-transparent border-0 border-b border-outline-variant/30 focus:ring-0 focus:border-primary transition-all py-3 px-0 font-light placeholder:text-outline-variant text-sm md:text-base" placeholder="julian@vane.com" type="email"/>
+                  </div>
+                  <div className="flex flex-col gap-2 md:col-span-2 text-left">
+                    <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Event Concept</label>
+                    <input className="bg-transparent border-0 border-b border-outline-variant/30 focus:ring-0 focus:border-primary transition-all py-3 px-0 font-light placeholder:text-outline-variant text-sm md:text-base" placeholder="Briefly describe your vision..." type="text"/>
+                  </div>
+                  
+                  <div className="md:col-span-2 flex justify-center mt-4 md:mt-8">
+                    <button className="silk-gradient text-on-primary px-10 md:px-16 py-4 md:py-5 rounded-lg font-label text-xs md:text-sm font-extrabold uppercase tracking-[0.2em] shadow-lg group w-full sm:w-auto">
+                      Send Inquiry
+                      <span className="material-symbols-outlined align-middle ml-2 group-hover:translate-y-[-2px] transition-transform">send</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </>
   );
 };
 
