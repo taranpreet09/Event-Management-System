@@ -54,18 +54,20 @@ const LoginForm = () => {
     setLoading(false);
   };
 
-  const inputStyles = "w-full p-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all";
-  const buttonStyles = "w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 transition-transform duration-200";
+  const inputStyles = "w-full bg-transparent border border-outline-variant/30 focus:ring-1 focus:border-primary transition-all py-3 px-3 font-body font-light placeholder:text-outline-variant text-sm rounded-lg";
+  const buttonStyles = "w-full bg-primary text-on-primary font-label text-sm font-bold uppercase tracking-widest py-4 px-4 rounded-lg hover:opacity-90 transition-opacity";
 
   return (
-    <div className="p-4">
+    <div className="p-8">
       {step === 'ENTER_EMAIL' ? (
         <div>
-          <h2 className="text-3xl font-bold text-center mb-2 font-heading">Login</h2>
-          <p className="text-center text-gray-500 mb-6">Welcome back to EventManager.</p>
-          <form onSubmit={handleEmailSubmit} className="space-y-6">
-            <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+          <div className="mb-10">
+            <div className="font-headline text-2xl tracking-tighter text-primary mb-2">The Curator</div>
+            <p className="font-body text-on-surface-variant">Welcome back. Enter your email to continue.</p>
+          </div>
+          <form onSubmit={handleEmailSubmit} className="space-y-8">
+            <div className="flex flex-col gap-2">
+              <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold" htmlFor="email">
                 Email Address
               </label>
               <input
@@ -74,13 +76,13 @@ const LoginForm = () => {
               />
             </div>
             <button className={buttonStyles} type="submit" disabled={loading}>
-              Continue
+              {loading ? 'Checking...' : 'Continue'}
             </button>
-            <p className="text-center text-gray-600 text-sm mt-6">
+            <p className="text-center text-on-surface-variant text-sm mt-6 font-body">
               Don't have an account?{' '}
               <button
                 type="button" onClick={() => showModal('USER_REGISTER')}
-                className="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline"
+                className="font-semibold text-primary hover:opacity-60 transition-opacity"
               >
                 Sign Up
               </button>
@@ -89,28 +91,37 @@ const LoginForm = () => {
         </div>
       ) : (
         <div>
-          {displayName ? (
-            <h2 className="text-3xl font-bold text-center mb-2 font-heading">Welcome, {displayName}</h2>
-          ) : (
-            <h2 className="text-3xl font-bold text-center mb-2 font-heading">Enter Your Password</h2>
-          )}
-          <p className="text-center text-gray-500 mb-6 break-words">{email}</p>
-          <form onSubmit={handlePasswordSubmit} className="space-y-6">
-            <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+          <div className="mb-10">
+            {displayName ? (
+              <div className="font-headline text-2xl tracking-tighter text-primary mb-2">Welcome, {displayName}</div>
+            ) : (
+              <div className="font-headline text-2xl tracking-tighter text-primary mb-2">Enter Your Password</div>
+            )}
+            <p className="font-body text-on-surface-variant break-words">{email}</p>
+          </div>
+          <form onSubmit={handlePasswordSubmit} className="space-y-8">
+            <div className="flex flex-col gap-2">
+              <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold" htmlFor="password">
                 Password
               </label>
               <input
                 type='password' id="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                required autoFocus className={inputStyles} placeholder="******************"
+                required autoFocus className={inputStyles} placeholder="••••••••••••"
               />
             </div>
             <button className={buttonStyles} type="submit" disabled={loading}>
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
             {formError && (
-              <p className="text-center text-red-600 text-sm">{formError}</p>
+              <p className="text-center text-error text-sm font-body">{formError}</p>
             )}
+            <button 
+              type="button"
+              onClick={() => setStep('ENTER_EMAIL')}
+              className="w-full text-center text-on-surface-variant text-sm font-body hover:text-primary transition-colors"
+            >
+              ← Use a different email
+            </button>
           </form>
         </div>
       )}

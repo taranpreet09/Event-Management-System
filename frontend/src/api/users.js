@@ -1,12 +1,13 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:1111/api/users';
-
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
-};
+import api from '../utils/auth.js';
 
 export const changePassword = (passwordData) => {
-    return axios.put(`${API_URL}/change-password`, passwordData, { headers: getAuthHeaders() });
+    return api.put('/users/change-password', passwordData);
+};
+
+export const updateProfile = (profileData) => {
+    return api.put('/users/update-profile', profileData);
+};
+
+export const deleteAccount = () => {
+    return api.delete('/users/delete-account');
 };

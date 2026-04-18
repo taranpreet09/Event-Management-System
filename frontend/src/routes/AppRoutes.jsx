@@ -79,7 +79,7 @@ const AppRoutes = () => {
 					path="inbox/:conversationId"
 					element={
 						<ProtectedRoute>
-							<ConversationPage />
+							<InboxPage />
 						</ProtectedRoute>
 					}
 				/>

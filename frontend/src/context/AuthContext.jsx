@@ -82,7 +82,11 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     setToken(null);
     navigate('/');
-  }, [navigate]); // Added navigate to dependency array
+  }, [navigate]);
+
+  const refreshToken = useCallback((newToken) => {
+    setToken(newToken);
+  }, []);
 
   const value = useMemo(() => ({
     token,
@@ -92,7 +96,8 @@ export const AuthProvider = ({ children }) => {
     registerUser,
     registerOrganizer,
     logout,
-  }), [token, user, login, registerUser, registerOrganizer, logout]);
+    refreshToken,
+  }), [token, user, login, registerUser, registerOrganizer, logout, refreshToken]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
